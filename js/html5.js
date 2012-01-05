@@ -132,6 +132,7 @@ door_anim[DEACTIVATED] = [0, 1, 2, 3, 4, 5];
 
 
 // images
+var alert_jetpack_img = new Image();
 var font_img = new Image();
 var tile_img = new Image();
 var dude_img = new Image();
@@ -144,11 +145,15 @@ var images = new Array();
 images['switch_1'] = new Image();
 images['door_1'] = new Image();
 images['door_2'] = new Image();
+images['door_3'] = new Image();
+images['door_4'] = new Image();
+images['jetpack_icon'] = new Image();
+
 
 
 function load_map(level) {
     var request = new XMLHttpRequest();
-    request.open('GET', 'http://scoab/maps/level_'+level+'.txt');
+    request.open('GET', 'http://tsaker/maps/level_'+level+'.txt');
     request.onreadystatechange = function() {
         if (request.readyState != 4 || request.status != 200) {
           return;
@@ -173,6 +178,7 @@ function parse_map(map_data) {
 }
 
 function load_images() {
+    alert_jetpack_img.src = 'images/jetpack.png';
     font_img.src = 'images/small_font.gif';
     tile_img.src = 'images/tiles.png';
     dude_img.src = 'images/dude_2.png';
@@ -185,7 +191,9 @@ function load_images() {
     images['switch_1'].src = 'images/switch_1.png';
     images['door_1'].src = 'images/door_1.png';
     images['door_2'].src = 'images/door_2.png';
-
+    images['door_3'].src = 'images/door_3.png';
+    images['door_4'].src = 'images/door_4.png';
+    images['jetpack_icon'].src = 'images/jetpack_icon.png';
 }
 
 function pixel_to_tile(x, y) {
@@ -279,10 +287,16 @@ function make_entities() {
         }
     });
     map_iterate(function(x, y) {
-        if(map[y][x] > 15 && map[y][x] < 32) {
+        if(map[y][x] > 31 && map[y][x] < 48) {
             entities.push(make_entity(x, y, map[y][x]));
         }
     });
+    map_iterate(function(x, y) {
+        if(map[y][x] > 8 && map[y][x] < 16) {
+            entities.push(make_entity(x, y, map[y][x]));
+        }
+
+    })
 }
 
 function map_iterate(func) {
@@ -295,7 +309,7 @@ function map_iterate(func) {
 
 function get_trigger(id){
     for(var i = 0; i < entities.length; ++i) {
-        if(entities[i].type == id - 1) {
+        if(entities[i].type == id - 16) {
             return entities[i];
         }
     }
@@ -337,7 +351,7 @@ function make_entity(x, y, type) {
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
         console.log('made a left switch');
-    } else if(map[y-1][x] == 56) {
+    } else if(map[y-1][x] == 64) {
         console.log('made a top door');
         entity.image = new Image();
         entity.image = images['door_1'];
@@ -345,7 +359,7 @@ function make_entity(x, y, type) {
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
         map[y][x] = 32;
-    } else if(map[y+1][x] == 57) {
+    } else if(map[y+1][x] == 65) {
         console.log('made a bottom door');
         entity.image = new Image();
         entity.image = images['door_2'];
@@ -353,6 +367,30 @@ function make_entity(x, y, type) {
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
         map[y][x] = 32;
+    } else if(map[y][x-1] == 64) {
+            console.log('made a left door');
+            entity.image = new Image();
+            entity.image = images['door_3'];
+            entity.current_anim = door_anim[ACTIVATED];
+            entity.frame = entity.current_anim.length - 1;
+            entity.state = ACTIVATED;
+            map[y][x] = 32;
+    } else if(map[y][x+1] == 64) {
+        console.log('made a top door');
+        entity.image = new Image();
+        entity.image = images['door_4'];
+        entity.current_anim = door_anim[ACTIVATED];
+        entity.frame = entity.current_anim.length - 1;
+        entity.state = ACTIVATED;
+        map[y][x] = 32;
+    } else if(type == '9') {
+        console.log('made a jetpack');
+        entity.image = new Image();
+        entity.image = images['jetpack_icon'];
+        //entity.image = images['door_2'];
+        entity.current_anim = door_anim[ACTIVATED];
+        entity.frame = entity.current_anim.length - 1;
+        entity.state = ACTIVATED;
     } else {
         console.log('made something else');
         entity.image = new Image();
@@ -566,7 +604,7 @@ function fire_particles(x, y, size, col) {
 		if(!particles[i]['alive']) {
 			particles[i]['alive'] = true;
 			particles[i]['x'] = x;
-			particles[i]['y'] = y;
+            particles[i]['y'] = y;
 			particles[i]['age'] = 0;
             particles[i]['size'] = size;
             particles[i]['col'] = col;
@@ -627,7 +665,16 @@ function move_enemies() {
 
 function move_entities() {
     for(var i = 0; i < entities.length; ++i) {
-        if(entities[i].type%2 == 0) {
+        if(entities[i].type > 8 && entities[i].type < 16) {
+            if(intersect(robotX, robotY+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                entities[i].alive = 0;
+                has_jetpack = true;
+            }
+        }
+
+    }
+    for(var i = 0; i < entities.length; ++i) {
+        if(entities[i].type > 15 && entities[i].type < 32) {
             if(intersect(entities[i].x, entities[i].y, 32, 32, robotX, robotY, 32, 32)) {
                 if(!entities[i].is_being_pushed && entities[i].state == ACTIVATED) {
                     entities[i].state = DEACTIVATED;
@@ -648,7 +695,7 @@ function move_entities() {
         }
     }
     for(i = 0; i < entities.length; ++i) {
-        if(entities[i].type%2 == 1) {
+        if(entities[i].type > 31 && entities[i].type < 48) {
             //console.log(i);
             var trigger = get_trigger(entities[i].type);
             if(trigger.state == DEACTIVATED && !entities[i].state == DEACTIVATED) {
@@ -666,6 +713,7 @@ function move_entities() {
                     if(enemies[j].alive) {
                         if(entities[i] && intersect(entities[i].x, entities[i].y, 32, 32,
                             enemies[j].x + 10, enemies[j].y, 12, 48)) {
+                            trigger.state = DEACTIVATED;
                             enemies[j].alive = false;
                             fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
                         }
