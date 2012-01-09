@@ -4,3 +4,6 @@
 [ ] more enemies
 [ ] more doors
 [ ] more powerups
+[ ] add checkpoints
+[ ] add level interstitials
+[ ] secret levels
