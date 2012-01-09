@@ -79,6 +79,7 @@ var particles = new Array(max_particles);
 var robotX;
 var robotY;
 var has_jetpack;
+var jetpack_fuel;
 var grounded = true;
 var crouching = false;
 var player_dead = false;
@@ -150,10 +151,9 @@ images['door_4'] = new Image();
 images['jetpack_icon'] = new Image();
 
 
-
 function load_map(level) {
     var request = new XMLHttpRequest();
-    request.open('GET', 'http://tsaker/maps/level_'+level+'.txt');
+    request.open('GET', 'http://scoab/maps/level_'+level+'.txt');
     request.onreadystatechange = function() {
         if (request.readyState != 4 || request.status != 200) {
           return;
@@ -276,7 +276,11 @@ function initialize_player() {
             robotY = y * 32 - 20;
         }
     });
-    has_jetpack = false;
+    //has_jetpack = false;
+    //jetpack_fuel = 0;
+    has_jetpack = true;
+    jetpack_fuel = 200;
+
 }
 
 function make_entities() {
@@ -391,6 +395,14 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
+    } else if (type == '15') {
+        console.log('made an exit');
+        //entity.image = new Image();
+        //entity.image = images['jetpack_icon'];
+        //entity.image = images['door_2'];
+        entity.current_anim = door_anim[ACTIVATED];
+        //entity.frame = entity.current_anim.length - 1;
+        entity.state = ACTIVATED;
     } else {
         console.log('made something else');
         entity.image = new Image();
@@ -440,7 +452,6 @@ function make_enemy(x, y, type) {
     enemy.bullet_timer = 21;
     enemy.alive = true;
     return enemy;
-
 }
 
 function make_enemy_bullets() {
@@ -469,7 +480,7 @@ function make_bullets() {
 }
 
 function animate() {
-    requestAnimFrame(animate);
+    window.requestAnimFrame(animate);
     game_loop();
 }
 
@@ -593,9 +604,11 @@ function move_stuff() {
 
 function draw_hud() {
     ctx.drawImage(tile_img, 0, 0, canvas.width, 15);
-    draw_text("X : " + robotX, 5, 2);
-    draw_text("Y : " + robotY, 120, 2);
-    draw_text("frame: " + robotFrame, 200, 2);
+    if(jetpack_fuel > 0) {
+        draw_text("JETPACK", 5, 2);
+        ctx.fillStyle = "#990000";
+        drawRectangle(92, 2, jetpack_fuel, 10, true);
+    }
 }
 
 function fire_particles(x, y, size, col) {
@@ -664,16 +677,25 @@ function move_enemies() {
 }
 
 function move_entities() {
-    for(var i = 0; i < entities.length; ++i) {
+    var i;
+    for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 8 && entities[i].type < 16) {
             if(intersect(robotX, robotY+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
-                entities[i].alive = 0;
-                has_jetpack = true;
+                if(entities[i].type == 10) {
+                    entities[i].alive = 0;
+                    has_jetpack = true;
+                    jetpack_fuel = 200;
+                } else if(entities[i].type == 15) {
+                    current_level++;
+                    load_map(current_level);
+                }
             }
         }
-
     }
-    for(var i = 0; i < entities.length; ++i) {
+    if(jetpack_fuel < 0) {
+        has_jetpack = false;
+    }
+    for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 15 && entities[i].type < 32) {
             if(intersect(entities[i].x, entities[i].y, 32, 32, robotX, robotY, 32, 32)) {
                 if(!entities[i].is_being_pushed && entities[i].state == ACTIVATED) {
@@ -769,15 +791,15 @@ function drawRectangle(x, y, w, h, fill) {
 
 function enemy_fire(x, y, direc) {
 
-        for(var i = 0; i < enemy_bullets.length; ++i) {
-            if(!enemy_bullets[i].alive) {
-                enemy_bullets[i].x = x + 26;
-                enemy_bullets[i].y = y + 16;
-                enemy_bullets[i].direction = direc;
-                enemy_bullets[i].alive = true;
-                break;
-            }
+    for(var i = 0; i < enemy_bullets.length; ++i) {
+        if(!enemy_bullets[i].alive) {
+            enemy_bullets[i].x = x + 26;
+            enemy_bullets[i].y = y + 16;
+            enemy_bullets[i].direction = direc;
+            enemy_bullets[i].alive = true;
+            break;
         }
+    }
 }
 
 function dude_fire() {
@@ -843,9 +865,11 @@ function draw_entities() {
             if(entities[i].frame >= entities[i].current_anim.length) {
                 entities[i].frame = entities[i].current_anim.length - 1;
             }
-            ctx.drawImage(entities[i].image,
-                entities[i].current_anim[entities[i].frame] * 32, 0, 32, 32,
-                entities[i].x + window_x,entities[i].y + window_y, 32, 32);
+            if(entities[i] && entities[i].image) {
+                ctx.drawImage(entities[i].image,
+                    entities[i].current_anim[entities[i].frame] * 32, 0, 32, 32,
+                    entities[i].x + window_x,entities[i].y + window_y, 32, 32);
+            }
         }
     }
 }
@@ -871,7 +895,7 @@ function draw_text(str, x, y) {
         var sx = index%10 * 10;
         var sy = Math.floor(index/10) * 10;
         ctx.drawImage(font_img, sx, sy, 10, 10,
-                      x + (i * 10) , y, 10, 10);
+                      x + (i * 12) , y, 10, 10);
     }
 }
 
@@ -892,7 +916,7 @@ function get_input() {
     }
     if(!player_dead) {
         var standing = true;
-        if ((37 in keys && keys[37]) || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
+        if (37 in keys && keys[37]) { // || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
             if(!crouching) {
                 robotX -= 3;
             }
@@ -916,7 +940,7 @@ function get_input() {
         } else {
             inertiaX -= 1;
         }
-        if ((39 in keys && keys[39]) || (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
+        if (39 in keys && keys[39]) { //|| (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
             if(!crouching) {
                 //inertiaX += 1;
                 robotX += 3;
@@ -957,6 +981,7 @@ function get_input() {
             }
             if(has_jetpack) {
                 inertiaY = -4;
+                jetpack_fuel -= 1;
                 if(direction > 0) {
                     current_anim = anim[JET_LEFT];
                 } else {
