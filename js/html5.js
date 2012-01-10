@@ -372,13 +372,13 @@ function make_entity(x, y, type) {
         entity.state = ACTIVATED;
         map[y][x] = 32;
     } else if(map[y][x-1] == 64) {
-            console.log('made a left door');
-            entity.image = new Image();
-            entity.image = images['door_3'];
-            entity.current_anim = door_anim[ACTIVATED];
-            entity.frame = entity.current_anim.length - 1;
-            entity.state = ACTIVATED;
-            map[y][x] = 32;
+        console.log('made a left door');
+        entity.image = new Image();
+        entity.image = images['door_3'];
+        entity.current_anim = door_anim[ACTIVATED];
+        entity.frame = entity.current_anim.length - 1;
+        entity.state = ACTIVATED;
+        map[y][x] = 32;
     } else if(map[y][x+1] == 64) {
         console.log('made a top door');
         entity.image = new Image();
@@ -681,7 +681,7 @@ function move_entities() {
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 8 && entities[i].type < 16) {
             if(intersect(robotX, robotY+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
-                if(entities[i].type == 10) {
+                if(entities[i].type == 9) {
                     entities[i].alive = 0;
                     has_jetpack = true;
                     jetpack_fuel = 200;
