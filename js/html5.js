@@ -251,8 +251,8 @@ function initialize_data() {
 
     initialize_player();
 
-    window_x = robotX + 80;
-    window_y = robotY + 50;
+    window_x = 200 - robotX;
+    window_y = 100 - robotY;
 
     enemies = new Array();
     entities = new Array();
@@ -948,13 +948,13 @@ function get_input() {
                 //inertiaX += 1;
                 robotX += 3;
             }
-            if(pixel_to_tile(robotX + 32, robotY + 47) == 11) {
-                window_x = 0;
-                window_y = 0;
+/*            if(pixel_to_tile(robotX + 32, robotY + 47) == 11) {
+                //window_x = 0;
+                //window_y = 0;
                 current_level = '1';
                 load_map(current_level);
             }
-
+*/
             if(pixel_to_tile(robotX + 24, robotY+32) > 0 || pixel_to_tile(robotX + 24, robotY + 32) > 0 ||
               pixel_to_tile(robotX + 24, robotY+15) > 0 || pixel_to_tile(robotX + 24, robotY + 15) > 0
                 || pixel_to_tile(robotX + 8, robotY+48) > 0 || pixel_to_tile(robotX + 24, robotY+48) > 0) {
@@ -1015,6 +1015,7 @@ function get_input() {
             }
         }
     }
+
     if(robotX + window_x < 200) {
         window_x += 3;
     }
