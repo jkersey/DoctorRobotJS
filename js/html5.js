@@ -251,6 +251,9 @@ function initialize_data() {
 
     initialize_player();
 
+    window_x = robotX + 80;
+    window_y = robotY + 50;
+
     enemies = new Array();
     entities = new Array();
     enemy_bullets = new Array(max_enemy_bullets);
