@@ -1,5 +1,9 @@
 [ ] tile image shifting?
-[ ] find index bug
+[?] find index bug
+[X] jumping platform
+[ ] pushables
+[ ] blow-upables
+[ ] teleporters
 [ ] more levels
 [ ] more enemies
 [ ] more doors

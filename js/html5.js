@@ -76,14 +76,14 @@ var particles = new Array(max_particles);
 
 
 // player
-var robotX;
-var robotY;
+var robot_x;
+var robot_y;
 var has_jetpack;
 var jetpack_fuel;
 var grounded = true;
 var crouching = false;
 var player_dead = false;
-var robotFrame = 0;
+var robot_frame = 0;
 var direction = 1;
 var anim = new Array();
 anim[WALK_RIGHT] = [0, 1, 2, 3, 4, 5];
@@ -97,7 +97,6 @@ anim[CROUCH_RIGHT] = [21];
 var current_anim = anim[WALK_RIGHT];
 
 // player bullets
-var bulletY = 0;
 var bullet_timer = 4;
 var max_bullets = 10;
 var bullets = new Array(max_bullets);
@@ -152,8 +151,13 @@ images['jetpack_icon'] = new Image();
 
 
 function load_map(level) {
+    if(level > 1) {
+        level = 0;
+        current_level = 0;
+    }
     var request = new XMLHttpRequest();
     request.open('GET', 'http://scoab/maps/level_'+level+'.txt');
+    //request.open('GET', 'http://badbattery.com/maps/level_'+level+'.txt');
     request.onreadystatechange = function() {
         if (request.readyState != 4 || request.status != 200) {
           return;
@@ -251,8 +255,8 @@ function initialize_data() {
 
     initialize_player();
 
-    window_x = 200 - robotX;
-    window_y = 100 - robotY;
+    window_x = 200 - robot_x;
+    window_y = 100 - robot_y;
 
     enemies = new Array();
     entities = new Array();
@@ -275,8 +279,8 @@ function initialize_data() {
 function initialize_player() {
     map_iterate(function(x, y) {
         if(map[y][x] == PLAYER_START) {
-            robotX = x * 32;
-            robotY = y * 32 - 20;
+            robot_x = x * 32;
+            robot_y = y * 32 - 20;
         }
     });
     //has_jetpack = false;
@@ -288,6 +292,7 @@ function initialize_player() {
 
 function make_entities() {
     // have to make switches before doors
+    // switches and trampolines
     map_iterate(function(x, y) {
         if(map[y][x] > 15 && map[y][x] < 32) {
             entities.push(make_entity(x, y, map[y][x]));
@@ -400,6 +405,14 @@ function make_entity(x, y, type) {
         entity.state = ACTIVATED;
     } else if (type == '15') {
         console.log('made an exit');
+        //entity.image = new Image();
+        //entity.image = images['jetpack_icon'];
+        //entity.image = images['door_2'];
+        entity.current_anim = door_anim[ACTIVATED];
+        //entity.frame = entity.current_anim.length - 1;
+        entity.state = ACTIVATED;
+    } else if (type == '10') {
+        console.log('made a trampoline');
         //entity.image = new Image();
         //entity.image = images['jetpack_icon'];
         //entity.image = images['door_2'];
@@ -589,12 +602,12 @@ function move_stuff() {
     move_bullets();
     move_particles();
     inertiaY = inertiaY + gravity;
-    robotY += inertiaY;
-    if(pixel_to_tile(robotX + 8, robotY+15) > 0 || pixel_to_tile(robotX + 24, robotY+15) > 0) {
-        robotY -= inertiaY;
+    robot_y += inertiaY;
+    if(pixel_to_tile(robot_x + 8, robot_y+15) > 0 || pixel_to_tile(robot_x + 24, robot_y+15) > 0) {
+        robot_y -= inertiaY;
         inertiaY = 0;
-    } else if(pixel_to_tile(robotX + 8, robotY+48) > 0 || pixel_to_tile(robotX + 24, robotY + 48) > 0) {
-        robotY -= inertiaY;
+    } else if(pixel_to_tile(robot_x + 8, robot_y+48) > 0 || pixel_to_tile(robot_x + 24, robot_y + 48) > 0) {
+        robot_y -= inertiaY;
         inertiaY = 0;
         grounded = true;
     } else {
@@ -635,8 +648,8 @@ function fire_particles(x, y, size, col) {
 function move_enemies() {
     for(var i = 0; i < enemies.length; ++i) {
         if(enemies[i].alive) {
-            if(vertical_intersect(enemies[i].y, 48, robotY, 48)) {
-                if(enemies[i].x > robotX) {
+            if(vertical_intersect(enemies[i].y, 48, robot_y, 48)) {
+                if(enemies[i].x > robot_x) {
                     enemies[i].direction = -1;
                 } else {
                     enemies[i].direction = 1;
@@ -680,10 +693,11 @@ function move_enemies() {
 }
 
 function move_entities() {
+    // make sure the entities are even on the screen
     var i;
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 8 && entities[i].type < 16) {
-            if(intersect(robotX, robotY+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+            if(intersect(robot_x, robot_y+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
                 if(entities[i].type == 9) {
                     entities[i].alive = 0;
                     has_jetpack = true;
@@ -693,6 +707,16 @@ function move_entities() {
                     load_map(current_level);
                 }
             }
+            if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                if(entities[i].type == 10) {
+                    if(grounded) {
+                        // play animation
+                        standing = false;
+                        inertiaY = -15;
+                        grounded = false;
+                    }
+                }
+            }
         }
     }
     if(jetpack_fuel < 0) {
@@ -700,7 +724,7 @@ function move_entities() {
     }
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 15 && entities[i].type < 32) {
-            if(intersect(entities[i].x, entities[i].y, 32, 32, robotX, robotY, 32, 32)) {
+            if(intersect(robot_x, robot_y + 16, 32, 32, entities[i].x, entities[i].y, 32, 32)) {
                 if(!entities[i].is_being_pushed && entities[i].state == ACTIVATED) {
                     entities[i].state = DEACTIVATED;
                     entities[i].current_anim = entity_anim[DEACTIVATED];
@@ -759,7 +783,7 @@ function move_enemy_bullets() {
     } else {
         y_offset = 10;
     }
-    var robot_y_top = robotY + y_offset;
+    var robot_y_top = robot_y + y_offset;
     for(var i = 0; i < enemy_bullets.length; ++i) {
         //console.log(enemy_bullets.length);
         if(enemy_bullets[i].alive) {
@@ -771,11 +795,11 @@ function move_enemy_bullets() {
                 enemy_bullets[i].alive = false;
 				fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
             } else {
-                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, robotX + 10, robot_y_top, 12, 48 - y_offset)) {
+                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, robot_x + 10, robot_y_top, 12, 48 - y_offset)) {
                     //enemies[j].alive = false;
                     enemy_bullets[i].alive = false;
                     fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
-                    fire_particles(robotX + 16, robotY + 16, 4,'grey');
+                    fire_particles(robot_x + 16, robot_y + 16, 4,'grey');
                     reset_level = true;
                     player_dead = true;
                 }
@@ -810,8 +834,8 @@ function dude_fire() {
         bullet_timer = 0;
         for(var i = 0; i < max_bullets; ++i) {
             if(!bullets[i]['alive']) {
-                bullets[i]['x'] = robotX + 26;
-                bullets[i]['y'] = bulletY = robotY + 25;
+                bullets[i]['x'] = robot_x + 26;
+                bullets[i]['y'] = robot_y + 25;
                 if(crouching) {
                     bullets[i]['y'] += 10;
                 }
@@ -882,14 +906,14 @@ function draw_dude() {
     if(waitIndex > frameRate) {
         waitIndex = 0;
         if(grounded) {
-            robotFrame++;
+            robot_frame++;
         }
     }
-    if(robotFrame >= current_anim.length) {
-        robotFrame = 0;
+    if(robot_frame >= current_anim.length) {
+        robot_frame = 0;
     }
-    ctx.drawImage(dude_img, current_anim[robotFrame] * 32, 0, 32, 48,
-        robotX + window_x,robotY + window_y, 32, 48);
+    ctx.drawImage(dude_img, current_anim[robot_frame] * 32, 0, 32, 48,
+        robot_x + window_x,robot_y + window_y, 32, 48);
 }
 
 function draw_text(str, x, y) {
@@ -909,7 +933,10 @@ function vertical_intersect(y, yh, y2, y2h) {
 
 function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
     return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
+}
 
+function contains(sx, sy, sw, sh, tx, ty, tw, th) {
+    return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
 }
 
 
@@ -921,18 +948,18 @@ function get_input() {
         var standing = true;
         if (37 in keys && keys[37]) { // || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
             if(!crouching) {
-                robotX -= 3;
+                robot_x -= 3;
             }
-            if(pixel_to_tile(robotX, robotY + 47) == 11) {
+            if(pixel_to_tile(robot_x, robot_y + 47) == 11) {
                 window_x = 0;
                 window_y = 0;
                 current_level = '1';
                 load_map(current_level);
             }
-            if(pixel_to_tile(robotX + 8, robotY+32) > 0 || pixel_to_tile(robotX + 24, robotY + 32) > 0
-                || pixel_to_tile(robotX + 8, robotY+15) > 0 || pixel_to_tile(robotX + 24, robotY+15) > 0
-                || pixel_to_tile(robotX + 8, robotY+48) > 0 || pixel_to_tile(robotX + 24, robotY+48) > 0) {
-                robotX += 3;
+            if(pixel_to_tile(robot_x + 8, robot_y+32) > 0 || pixel_to_tile(robot_x + 24, robot_y + 32) > 0
+                || pixel_to_tile(robot_x + 8, robot_y+15) > 0 || pixel_to_tile(robot_x + 24, robot_y+15) > 0
+                || pixel_to_tile(robot_x + 8, robot_y+48) > 0 || pixel_to_tile(robot_x + 24, robot_y+48) > 0) {
+                robot_x += 3;
                 standing = true;
                 current_anim = anim[STAND_LEFT];
             } else {
@@ -946,20 +973,20 @@ function get_input() {
         if (39 in keys && keys[39]) { //|| (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
             if(!crouching) {
                 //inertiaX += 1;
-                robotX += 3;
+                robot_x += 3;
             }
-/*            if(pixel_to_tile(robotX + 32, robotY + 47) == 11) {
+/*            if(pixel_to_tile(robot_x + 32, robot_y + 47) == 11) {
                 //window_x = 0;
                 //window_y = 0;
                 current_level = '1';
                 load_map(current_level);
             }
 */
-            if(pixel_to_tile(robotX + 24, robotY+32) > 0 || pixel_to_tile(robotX + 24, robotY + 32) > 0 ||
-              pixel_to_tile(robotX + 24, robotY+15) > 0 || pixel_to_tile(robotX + 24, robotY + 15) > 0
-                || pixel_to_tile(robotX + 8, robotY+48) > 0 || pixel_to_tile(robotX + 24, robotY+48) > 0) {
+            if(pixel_to_tile(robot_x + 24, robot_y+32) > 0 || pixel_to_tile(robot_x + 24, robot_y + 32) > 0 ||
+              pixel_to_tile(robot_x + 24, robot_y+15) > 0 || pixel_to_tile(robot_x + 24, robot_y + 15) > 0
+                || pixel_to_tile(robot_x + 8, robot_y+48) > 0 || pixel_to_tile(robot_x + 24, robot_y+48) > 0) {
                             //inertiaX -= 1;
-                            robotX -= 3;
+                            robot_x -= 3;
                 standing = true;
                 current_anim = anim[STAND_RIGHT];
             } else {
@@ -980,7 +1007,7 @@ function get_input() {
             if(grounded) {
                 standing = false;
                 inertiaY = -9;
-            grounded = false;
+                grounded = false;
             }
             if(has_jetpack) {
                 inertiaY = -4;
@@ -1016,16 +1043,16 @@ function get_input() {
         }
     }
 
-    if(robotX + window_x < 200) {
+    if(robot_x + window_x < 200) {
         window_x += 3;
     }
-    if(robotX + window_x > canvas.width - 200) {
+    if(robot_x + window_x > canvas.width - 200) {
         window_x -= 3;
     }
-    if(robotY + window_y <  100) {
+    if(robot_y + window_y <  100) {
         window_y += 8;
     }
-    if(robotY + window_y > canvas.height - 100) {
+    if(robot_y + window_y > canvas.height - 100) {
         window_y -= 8;
     }
     //energy++;
