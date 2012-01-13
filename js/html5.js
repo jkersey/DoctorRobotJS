@@ -60,6 +60,7 @@ var ACTIVATED = 1;
 var DEACTIVATING = 2;
 var ACTIVATING = 3;
 var OPEN = 4;
+var CLOSED = 5;
 
 // enemies
 var enemies = new Array();
@@ -743,14 +744,15 @@ function move_entities() {
     }
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 15 && entities[i].type < 32) {
-            if(entities[i].state == OPEN) {
-                if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
-                    var target = get_target(entities[i].type);
-                    console.log('target type is ' + target.type);
-                    console.log('target position is ' + target.x + ":" + target.y);
-                    console.log('my type is' + entities[i].type);
-                    robot_x = target.x;
-                    robot_y = target.y - 18;
+            var target = get_target(entities[i].type);
+            if (entities[i].state == OPEN && contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                console.log('teleport');
+                robot_x = target.x;
+                robot_y = target.y - 20;
+                target.state = CLOSED;
+            } else {
+                if(entities[i].state == CLOSED && !intersect(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                    entities[i].state = OPEN;
                 }
             }
             if(intersect(robot_x, robot_y + 16, 32, 32, entities[i].x, entities[i].y, 32, 32)) {
@@ -774,13 +776,18 @@ function move_entities() {
     }
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 31 && entities[i].type < 48) {
-            //console.log(i);
             var trigger = get_trigger(entities[i].type);
-            if(trigger.state == OPEN) {
-                if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
-                    robot_x = trigger.x;
-                    robot_y = trigger.y - 18;
+            if (entities[i].state == OPEN && contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                console.log('could teleport');
+                console.log('teleport');
+                robot_x = trigger.x;
+                robot_y = trigger.y - 20;
+                trigger.state = CLOSED;
+            } else {
+                if(entities[i].state == CLOSED && !intersect(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                    entities[i].state = OPEN;
                 }
+
             }
             if(trigger.state == DEACTIVATED && !entities[i].state == DEACTIVATED) {
                 entities[i].state = DEACTIVATED;
