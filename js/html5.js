@@ -59,6 +59,7 @@ var DEACTIVATED = 0;
 var ACTIVATED = 1;
 var DEACTIVATING = 2;
 var ACTIVATING = 3;
+var OPEN = 4;
 
 // enemies
 var enemies = new Array();
@@ -148,6 +149,7 @@ images['door_2'] = new Image();
 images['door_3'] = new Image();
 images['door_4'] = new Image();
 images['jetpack_icon'] = new Image();
+images['teleport_1'] = new Image();
 
 
 function load_map(level) {
@@ -193,6 +195,7 @@ function load_images() {
     enemy_2_img.src = 'images/enemy_2.png';
     parallax_img.src = 'images/parallax.png';
     images['switch_1'].src = 'images/switch_1.png';
+    images['teleport_1'].src = 'images/switch_1.png';
     images['door_1'].src = 'images/door_1.png';
     images['door_2'].src = 'images/door_2.png';
     images['door_3'].src = 'images/door_3.png';
@@ -204,7 +207,7 @@ function pixel_to_tile(x, y) {
     var x_tile = x >> 5;
     var y_tile = y >> 5;
     var tile = map[y_tile][x_tile];
-    if(tile > 31) {
+    if(tile > 47) {
         return map[y_tile][x_tile];
     } else {
         return 0;
@@ -213,7 +216,7 @@ function pixel_to_tile(x, y) {
 
 function draw_map() {
     map_iterate(function(x, y) {
-        if(map[y][x] > 32) {
+        if(map[y][x] > 47) {
             var x_pos = window_x + x * 32;
             var y_pos = window_y + y * 32;
             if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
@@ -328,6 +331,15 @@ function get_trigger(id){
     return 0;
 }
 
+function get_target(id) {
+    for(var i = 0; i < entities.length; ++i) {
+        if(entities[i].type == id + 16) {
+            return entities[i];
+        }
+    }
+    return 0;
+}
+
 function make_entity(x, y, type) {
 
     var entity = new Array();
@@ -363,6 +375,13 @@ function make_entity(x, y, type) {
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
         console.log('made a left switch');
+    } else if(map[y+1][x] == 49) {
+        entity.image = new Image();
+        entity.image = images['teleport_1'];
+        entity.current_anim = entity_anim[ACTIVATED];
+        entity.frame = entity.current_anim.length - 1;
+        entity.state = OPEN;
+        console.log('made a teleport pad');
     } else if(map[y-1][x] == 64) {
         console.log('made a top door');
         entity.image = new Image();
@@ -724,6 +743,16 @@ function move_entities() {
     }
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 15 && entities[i].type < 32) {
+            if(entities[i].state == OPEN) {
+                if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                    var target = get_target(entities[i].type);
+                    console.log('target type is ' + target.type);
+                    console.log('target position is ' + target.x + ":" + target.y);
+                    console.log('my type is' + entities[i].type);
+                    robot_x = target.x;
+                    robot_y = target.y - 18;
+                }
+            }
             if(intersect(robot_x, robot_y + 16, 32, 32, entities[i].x, entities[i].y, 32, 32)) {
                 if(!entities[i].is_being_pushed && entities[i].state == ACTIVATED) {
                     entities[i].state = DEACTIVATED;
@@ -747,6 +776,12 @@ function move_entities() {
         if(entities[i].type > 31 && entities[i].type < 48) {
             //console.log(i);
             var trigger = get_trigger(entities[i].type);
+            if(trigger.state == OPEN) {
+                if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                    robot_x = trigger.x;
+                    robot_y = trigger.y - 18;
+                }
+            }
             if(trigger.state == DEACTIVATED && !entities[i].state == DEACTIVATED) {
                 entities[i].state = DEACTIVATED;
                 entities[i].current_anim = door_anim[DEACTIVATED];
