@@ -390,7 +390,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 49;
     } else if(map[y+1][x] == 65) {
         console.log('made a bottom door');
         entity.image = new Image();
@@ -398,7 +398,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 49;
     } else if(map[y][x-1] == 64) {
         console.log('made a left door');
         entity.image = new Image();
@@ -406,7 +406,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 49;
     } else if(map[y][x+1] == 64) {
         console.log('made a top door');
         entity.image = new Image();
@@ -414,7 +414,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 49;
     } else if(type == '9') {
         console.log('made a jetpack');
         entity.image = new Image();
@@ -725,7 +725,7 @@ function move_entities() {
                 } else if(entities[i].type == 15) {
                     current_level++;
                     load_map(current_level);
-                }
+          p      }
             }
             if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
                 if(entities[i].type == 10) {
@@ -797,7 +797,7 @@ function move_entities() {
 
             } else if(trigger.state == ACTIVATED && !entities[i].state == ACTIVATED) {
                 entities[i].state = ACTIVATED;
-                map[entities[i].tile_y][entities[i].tile_x] = 32;
+                map[entities[i].tile_y][entities[i].tile_x] = 49;
                 entities[i].current_anim = door_anim[ACTIVATED];
                 entities[i].frame = 0;
                  for(var j = 0; j < enemies.length; ++j) {
