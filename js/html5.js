@@ -10,9 +10,15 @@ var map_loaded = false;
 var current_level = '0';
 
 // control tiles
+var EMPTY = 0;
 var PLAYER_START = 1;
 var ENEMY_1_START = 3;
 var ENEMY_2_START = 4;
+var EMPTY_BLOCKING = 255;
+
+var JETPACK = 9;
+var JUMPER = 10;
+var CRATE = 11;
 
 var SWITCH_LEFT = 32;
 var SWITCH_FLOOR = 33;
@@ -144,6 +150,7 @@ var map_img = new Image();
 var bullet_img = new Image();
 var parallax_img = new Image();
 var images = new Array();
+images['crate_1'] = new Image();
 images['switch_1'] = new Image();
 images['door_1'] = new Image();
 images['door_2'] = new Image();
@@ -197,6 +204,7 @@ function load_images() {
     parallax_img.src = 'images/parallax.png';
     images['switch_1'].src = 'images/switch_1.png';
     images['teleport_1'].src = 'images/switch_1.png';
+    images['crate_1'].src = 'images/crate_1.png';
     images['door_1'].src = 'images/door_1.png';
     images['door_2'].src = 'images/door_2.png';
     images['door_3'].src = 'images/door_3.png';
@@ -215,6 +223,12 @@ function pixel_to_tile(x, y) {
     }
 }
 
+function true_pixel_to_tile(x, y) {
+    var x_tile = x >> 5;
+    var y_tile = y >> 5;
+    return map[y_tile][x_tile];
+}
+
 function draw_map() {
     map_iterate(function(x, y) {
         if(map[y][x] > 47) {
@@ -229,7 +243,6 @@ function draw_map() {
         }
     });
 }
-
 
 // shim layer with setTimeout fallback
 window.requestAnimFrame = (function(){
@@ -390,7 +403,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 255;
     } else if(map[y+1][x] == 65) {
         console.log('made a bottom door');
         entity.image = new Image();
@@ -398,7 +411,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 255;
     } else if(map[y][x-1] == 64) {
         console.log('made a left door');
         entity.image = new Image();
@@ -406,7 +419,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 255;
     } else if(map[y][x+1] == 64) {
         console.log('made a top door');
         entity.image = new Image();
@@ -414,8 +427,8 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
-    } else if(type == '9') {
+        map[y][x] = 255;
+    } else if(type == JETPACK) {
         console.log('made a jetpack');
         entity.image = new Image();
         entity.image = images['jetpack_icon'];
@@ -423,7 +436,16 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-    } else if (type == '15') {
+    } else if(type == CRATE) {
+        console.log('made a crate');
+        entity.image = new Image();
+        entity.image = images['crate_1'];
+        entity.current_anim = door_anim[ACTIVATED];
+        entity.frame = entity.current_anim.length - 1;
+        entity.y_inertia = 1;
+        entity.state = ACTIVATED;
+        map[y][x] = 0;
+    }else if (type == '15') {
         console.log('made an exit');
         //entity.image = new Image();
         //entity.image = images['jetpack_icon'];
@@ -431,7 +453,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         //entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-    } else if (type == '10') {
+    } else if (type == JUMPER) {
         console.log('made a trampoline');
         //entity.image = new Image();
         //entity.image = images['jetpack_icon'];
@@ -446,7 +468,7 @@ function make_entity(x, y, type) {
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
-        map[y][x] = 32;
+        map[y][x] = 255;
     }
     entity.is_being_pushed = false;
     entity.type = type;
@@ -482,6 +504,7 @@ function make_enemy(x, y, type) {
     enemy.direction = 1;
     enemy.x = x * 32;
     enemy.y = y * 32 - 18;
+    enemy.y_inertia = 1;
     enemy.current_anim = enemy_anim[WALK_LEFT];
     enemy.frame = 0;
     enemy.wait_index = 0;
@@ -592,6 +615,15 @@ function move_bullets() {
                         }
                     }
                 }
+                for(var k = 0; k < entities.length; ++k) {
+                    if(entities[k].type == CRATE) {
+                        if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
+                            entities[k].x, entities[k].y, 32, 32)) {
+                            bullets[i].alive = false;
+                            fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
+                        }
+                    }
+                }
             }
         }
     }
@@ -668,6 +700,41 @@ function fire_particles(x, y, size, col) {
 function move_enemies() {
     for(var i = 0; i < enemies.length; ++i) {
         if(enemies[i].alive) {
+            // check for crate intersections
+            for(var k = 0; k < entities.length; ++k) {
+                if(entities[k].type == CRATE) {
+                    if(intersect(enemies[i].x, enemies[i].y, 32, 48, entities[k].x, entities[k].y, 32, 32)) {
+                        if(enemies[i].x < entities[k].x) {
+                            enemies[i].x -=4;
+                        } else {
+                            enemies[i].x += 4;
+                            if(pixel_to_tile(enemies[i].x, enemies[i].y) > 0 || pixel_to_tile(enemies[i].x + 32, enemies[i].y) > 0) {
+                                if(enemies[i].x < entities[k].x) {
+                                    enemies[i].x +=4;
+                                    entities[k].x += 4;
+                                    robot_x += 4;
+                                } else {
+                                    enemies[i].x -=4;
+                                    entities[k].x -= 4;
+                                    robot_x -= 4;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(enemies[i].y_inertia < 10) {
+                enemies[i].y_inertia = enemies[i].y_inertia * 2;
+            } else {
+                enemies[i].y_inertia = 10;
+            }
+            enemies[i].y += enemies[i].y_inertia;
+            if(pixel_to_tile(enemies[i].x + 2, enemies[i].y + 47) > 0 ||
+                pixel_to_tile(enemies[i].x + 30, enemies[i].y + 47) > 0) {
+                enemies[i].y -= enemies[i].y_inertia;
+                enemies[i].y_inertia = 1;
+            }
+
             if(vertical_intersect(enemies[i].y, 48, robot_y, 48)) {
                 if(enemies[i].x > robot_x) {
                     enemies[i].direction = -1;
@@ -689,20 +756,19 @@ function move_enemies() {
             }
 
             enemies[i].x += enemies[i].direction;
-            if(pixel_to_tile(enemies[i].x, enemies[i].y + 40) > 0 ||
-                pixel_to_tile(enemies[i].x + 32, enemies[i].y + 40) > 0) {
+
+            // if there is a tile in front of them, change directions
+            if(pixel_to_tile(enemies[i].x, enemies[i].y + 30) > 0 ||
+                pixel_to_tile(enemies[i].x + 32, enemies[i].y + 30) > 0) {
                 enemies[i].direction = -enemies[i].direction;
                 enemies[i].x += enemies[i].direction;
             }
-            if(pixel_to_tile(enemies[i].x + 32, enemies[i].y + 50) == 0 ||
-                pixel_to_tile(enemies[i].x, enemies[i].y + 50) == 0) {
+            // if they would be walking on an empty tile, change direction
+            if(pixel_to_tile(enemies[i].x + 32, enemies[i].y + 50) < 1 ||
+                pixel_to_tile(enemies[i].x, enemies[i].y + 50) < 1) {
                 enemies[i].direction = -enemies[i].direction;
             }
-            enemies[i].y += 1;
-            if(pixel_to_tile(enemies[i].x, enemies[i].y + 47) > 0 ||
-                pixel_to_tile(enemies[i].x + 32, enemies[i].y + 47) > 0) {
-                enemies[i].y -= 1;
-            }
+
             if(enemies[i].direction == -1) {
                 enemies[i].current_anim = enemy_anim[WALK_RIGHT];
             } else {
@@ -717,8 +783,50 @@ function move_entities() {
     var i;
     for(i = 0; i < entities.length; ++i) {
         if(entities[i].type > 8 && entities[i].type < 16) {
+            if (entities[i].type == CRATE) {
+                for(var k = 0; k < enemies.length; ++k) {
+                    if(intersect(entities[i].x, entities[i].y, 32, 32, enemies[k].x, enemies[k].y + 8, 32, 48)) {
+                        if(entities[i].y_inertia > 1 && enemies[k].y_inertia == 1 && entities[i].y < enemies[k].y) {
+                            enemies[k].alive = false;
+                            fire_particles(enemies[k].x, enemies[k].y, 4, 'red');
+                        }
+                    }
+                }
+                if(entities[i].y_inertia < 10) {
+                    entities[i].y_inertia = entities[i].y_inertia * 2;
+                } else {
+                    entities[i].y_inertia = 10;
+                }
+                entities[i].y += entities[i].y_inertia;
+                if(pixel_to_tile(entities[i].x, entities[i].y + 32) > 0 ||
+                    pixel_to_tile(entities[i].x + 32, entities[i].y + 32) > 0) {
+                    entities[i].y -= entities[i].y_inertia;
+                    entities[i].y_inertia = 1;
+                }
+                if(intersect(robot_x, robot_y+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
+                    if(robot_y + 48 > entities[i].y) {
+                        if (entities[i].x > robot_x) {
+                        robot_x--;
+                        entities[i].x += 2;
+                        if(pixel_to_tile(entities[i].x + 32, entities[i].y) > 0) {
+                            entities[i].x -= 2;
+                            robot_x-=4;
+                        }
+                    } else {
+                        robot_x++;
+                        entities[i].x -= 2;
+                        if(pixel_to_tile(entities[i].x, entities[i].y) > 0) {
+                            entities[i].x += 2;
+                            robot_x+=4;
+                        }
+                        }
+                    } else {
+
+                    }
+                }
+            }
             if(intersect(robot_x, robot_y+32,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
-                if(entities[i].type == 9) {
+                if(entities[i].type == JETPACK) {
                     entities[i].alive = 0;
                     has_jetpack = true;
                     jetpack_fuel = 200;
@@ -727,6 +835,7 @@ function move_entities() {
                     load_map(current_level);
                 }
             }
+
             if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
                 if(entities[i].type == 10) {
                     if(grounded) {
@@ -797,7 +906,7 @@ function move_entities() {
 
             } else if(trigger.state == ACTIVATED && !entities[i].state == ACTIVATED) {
                 entities[i].state = ACTIVATED;
-                map[entities[i].tile_y][entities[i].tile_x] = 32;
+                map[entities[i].tile_y][entities[i].tile_x] = 255;
                 entities[i].current_anim = door_anim[ACTIVATED];
                 entities[i].frame = 0;
                  for(var j = 0; j < enemies.length; ++j) {
@@ -845,6 +954,16 @@ function move_enemy_bullets() {
                     reset_level = true;
                     player_dead = true;
                 }
+                for(var k = 0; k < entities.length; ++k) {
+                    if(entities[k].type == CRATE) {
+                        if(enemy_bullets[i] && intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
+                            entities[k].x, entities[k].y, 32, 32)) {
+                            enemy_bullets[i].alive = false;
+                            fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
+                        }
+                    }
+                }
+
             }
         }
     }
@@ -923,6 +1042,7 @@ function draw_enemies() {
         }
     }
 }
+
 function draw_entities() {
     for(var i = 0; i < entities.length; ++i) {
         entities[i].wait_index++;
@@ -975,6 +1095,13 @@ function vertical_intersect(y, yh, y2, y2h) {
 
 function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
     return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
+}
+
+function collides_with(type_1, type_2) {
+
+    if(type_1 == CRATE || type_2 == CRATE) {
+        return true;
+    }
 }
 
 function contains(sx, sy, sw, sh, tx, ty, tw, th) {
