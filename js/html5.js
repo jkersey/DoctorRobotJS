@@ -9,6 +9,8 @@ var map;
 var map_loaded = false;
 var current_level = '0';
 
+var TILE_WIDTH = 32;
+
 // control tiles
 var EMPTY = 0;
 var PLAYER_START = 1;
@@ -354,6 +356,54 @@ function get_target(id) {
     return 0;
 }
 
+function Enemy(x_t, y_t, tp, img) {
+
+    this.x_tile = x_t;
+    this.y_tile = y_t;
+    this.type = tp;
+
+    this.x = this.x_tile * TILE_WIDTH;
+    this.y = this.y_tile * TILE_WIDTH - 18;
+    this.y_inertia = 1;
+
+    this.image = img;
+
+    this.current_anim = enemy_anim[WALK_LEFT];
+    this.frame = 0;
+    this.state = ACTIVATED;
+
+    this.is_being_pushed = false;
+    this.wait_index = 0;
+    this.alive = true;
+
+    this.direction = 1;
+    this.bullet_timer = 21;
+
+    map[this.y_tile][this.x_tile] = 0;
+}
+
+function Entity(x_t, y_t, tp, img) {
+
+    this.x_tile = x_t;
+    this.y_tile = y_t;
+    this.type = tp;
+
+    this.x = this.x_tile * TILE_WIDTH;
+    this.y = this.y_tile * TILE_WIDTH;
+
+    this.image = img;
+
+    this.current_anim = entity_anim[ACTIVATED];
+    this.frame = current_anim.length - 1;
+    this.state = ACTIVATED;
+
+    this.is_being_pushed = false;
+    this.wait_index = 0;
+    this.alive = true;
+
+    map[this.y_tile][this.x_tile] = 0;
+}
+
 function make_entity(x, y, type) {
 
     var entity = new Array();
@@ -383,14 +433,10 @@ function make_entity(x, y, type) {
     }
 
     if(map[y][x-1] == 48) {
-        entity.image = new Image();
-        entity.image = images['switch_1'];
-        entity.current_anim = entity_anim[ACTIVATED];
-        entity.frame = entity.current_anim.length - 1;
-        entity.state = ACTIVATED;
         console.log('made a left switch');
+        return new Entity(x, y, type, images['switch_1'], EMPTY);
     } else if(map[y+1][x] == 49) {
-        entity.image = new Image();
+        //entity.image = new Image();
         entity.image = images['teleport_1'];
         entity.current_anim = entity_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
@@ -398,15 +444,15 @@ function make_entity(x, y, type) {
         console.log('made a teleport pad');
     } else if(map[y-1][x] == 64) {
         console.log('made a top door');
-        entity.image = new Image();
+        //entity.image = new Image();
         entity.image = images['door_1'];
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
         entity.state = ACTIVATED;
         map[y][x] = 255;
-    } else if(map[y+1][x] == 65) {
+    } else if(map[y+1][x] == 64) {
         console.log('made a bottom door');
-        entity.image = new Image();
+        //entity.image = new Image();
         entity.image = images['door_2'];
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
@@ -414,7 +460,7 @@ function make_entity(x, y, type) {
         map[y][x] = 255;
     } else if(map[y][x-1] == 64) {
         console.log('made a left door');
-        entity.image = new Image();
+        //entity.image = new Image();
         entity.image = images['door_3'];
         entity.current_anim = door_anim[ACTIVATED];
         entity.frame = entity.current_anim.length - 1;
@@ -445,30 +491,13 @@ function make_entity(x, y, type) {
         entity.y_inertia = 1;
         entity.state = ACTIVATED;
         map[y][x] = 0;
-    }else if (type == '15') {
-        console.log('made an exit');
-        //entity.image = new Image();
-        //entity.image = images['jetpack_icon'];
-        //entity.image = images['door_2'];
-        entity.current_anim = door_anim[ACTIVATED];
-        //entity.frame = entity.current_anim.length - 1;
-        entity.state = ACTIVATED;
+    } else if (type == '15') {
+        return new Entity(x, y, type, null, EMPTY);
     } else if (type == JUMPER) {
-        console.log('made a trampoline');
-        //entity.image = new Image();
-        //entity.image = images['jetpack_icon'];
-        //entity.image = images['door_2'];
-        entity.current_anim = door_anim[ACTIVATED];
-        //entity.frame = entity.current_anim.length - 1;
-        entity.state = ACTIVATED;
+        return new Entity(x, y, type, null, EMPTY);
     } else {
         console.log('made something else');
-        entity.image = new Image();
-        entity.image = images['door_2'];
-        entity.current_anim = door_anim[ACTIVATED];
-        entity.frame = entity.current_anim.length - 1;
-        entity.state = ACTIVATED;
-        map[y][x] = 255;
+        return new Entity(x, y, type, images['door_2'], EMPTY_BLOCKING);
     }
     entity.is_being_pushed = false;
     entity.type = type;
@@ -494,12 +523,16 @@ function make_enemies() {
 
 function make_enemy(x, y, type) {
 
-    var enemy = new Array();
     if(type == 3) {
-        enemy.image = enemy_img;
+        image = enemy_img;
     } else if (type == 4) {
-        enemy.image = enemy_2_img;
+        image = enemy_2_img;
     }
+
+    return new Enemy(x, y, type, image, EMPTY);
+/*
+    var enemy = new Array();
+
     enemy.type = type;
     enemy.direction = 1;
     enemy.x = x * 32;
@@ -511,6 +544,7 @@ function make_enemy(x, y, type) {
     enemy.bullet_timer = 21;
     enemy.alive = true;
     return enemy;
+    */
 }
 
 function make_enemy_bullets() {
