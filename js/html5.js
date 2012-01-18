@@ -833,7 +833,7 @@ function move_entities() {
                 } else if(entities[i].type == 15) {
                     current_level++;
                     load_map(current_level);
-                }
+          p      }
             }
 
             if (contains(robot_x, robot_y+16,32, 32, entities[i].x, entities[i].y, 32, 32 )) {
