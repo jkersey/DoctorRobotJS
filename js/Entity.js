@@ -11,12 +11,11 @@ function Entity(x_t, y_t, tp, img, tile, key) {
     this.current_anim = door_anim[ACTIVATED];
     this.frame = current_anim.length - 1;
     this.state = ACTIVATED;
-    if(this.type == 49) {
-        this.state = OPEN;
-    }
+    this.is_teleportable = false;
     this.is_being_pushed = false;
     this.wait_index = 0;
     this.alive = true;
+    this.loop_animation = false;
     map[this.y_tile][this.x_tile] = tile;
 
     this.draw = function() {
@@ -27,7 +26,11 @@ function Entity(x_t, y_t, tp, img, tile, key) {
                 this.frame++;
             }
             if(this.frame >= this.current_anim.length) {
-                this.frame = this.current_anim.length - 1;
+                if(this.loop_animation) {
+                    this.frame = 0;
+                } else {
+                    this.frame = this.current_anim.length - 1;
+                }
             }
             if(this && this.image) {
                 ctx.drawImage(this.image,

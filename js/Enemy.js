@@ -177,7 +177,7 @@ function move_enemy_bullets() {
                     fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
                     fire_particles(player.x + 16, player.y + 16, 4,'grey');
                     reset_level = true;
-                    player_dead = true;
+                    player.alive = false;
                 }
                 for(var k = 0; k < entities.length; ++k) {
                     if(entities[k].type == CRATE) {

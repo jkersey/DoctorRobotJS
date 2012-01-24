@@ -25,6 +25,7 @@ function build_player() {
         this.up = false;
         this.down = false;
         this.can_teleport = true;
+        this.alive = true;
     };
 
     player.move = function() {
@@ -130,6 +131,7 @@ function build_player() {
     };
 
     player.draw = function() {
+        if(player.alive) {
         waitIndex++;
         if(waitIndex > frameRate) {
             waitIndex = 0;
@@ -142,6 +144,7 @@ function build_player() {
         }
         ctx.drawImage(dude_img, current_anim[this.frame] * 32, 0, 32, 48,
             this.x + window_x,this.y + window_y, 32, 48);
+        }
     };
 
     return player;

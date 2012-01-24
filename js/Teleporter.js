@@ -2,6 +2,8 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
     var entity = new Entity(x_t, y_t, tp, img, tile, key);
     entity.parent_type = parent_type;
     entity.state = OPEN;
+    entity.current_anim = teleporter_anim[OPEN];
+    entity.loop_animation = true;
 
     entity.get_trigger = function() {
         if(!this.trigger) {
@@ -22,14 +24,19 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
                 player.y = trigger.y - 18;
                 trigger.state = CLOSED;
                 this.state = CLOSED;
+                this.current_anim = teleporter_anim[CLOSED];
+                trigger.current_anim = teleporter_anim[CLOSED];
                 return;
             }
             for(var i = 0; i < entities.length; ++i) {
-                if(entities[i].isTeleportable) {
+                if(entities[i].is_teleportable) {
                     if(contains(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
                         entities[i].x = trigger.x;
                         entities[i].y = trigger.y;
                         this.state = CLOSED;
+                        trigger.state = CLOSED;
+                        this.current_anim = teleporter_anim[CLOSED];
+                        trigger.current_anim = teleporter_anim[CLOSED];
                         return;
                     }
                 }
@@ -41,7 +48,16 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
                 stay_closed = true;
             }
             if(!stay_closed) {
+                for(var i = 0; i < entities.length; ++i) {
+                    if(entities[i].is_teleportable && intersect(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
+                        stay_closed = true;
+                        break;
+                    }
+                }
+            }
+            if(!stay_closed) {
                 this.state = OPEN;
+                this.current_anim = teleporter_anim[OPEN];
             }
         }
     };

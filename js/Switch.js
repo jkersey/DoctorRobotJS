@@ -2,7 +2,7 @@ function build_switch(x_t, y_t, tp, img, tile, key) {
 
     entity = new Entity(x_t, y_t, tp, img, tile, key);
 
-    entity.check_player = function() {
+    entity.move = function() {
         if(intersect(player.x, player.y + 16, 32, 32, this.x, this.y, 32, 32)) {
             if(!this.is_being_pushed && this.state == ACTIVATED) {
                 this.state = DEACTIVATED;

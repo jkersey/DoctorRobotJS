@@ -75,6 +75,10 @@
     var OPEN = 1;
     var CLOSED = 0;
 
+    var teleporter_anim = new Array();
+    teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
+    teleporter_anim[CLOSED] = [5, 5, 5];
+
     // enemies
     var enemies = new Array();
     var enemy_bullet_timer = 4;

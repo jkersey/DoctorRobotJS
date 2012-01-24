@@ -1,6 +1,8 @@
 function build_crate(x_t, y_t, tp, img, tile, key) {
 
     var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    entity.is_teleportable = true;
+
 
     entity.move = function() {
         for(var k = 0; k < enemies.length; ++k) {
