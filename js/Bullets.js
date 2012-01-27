@@ -29,11 +29,17 @@ function move_bullets() {
                 }
                 for(var k = 0; k < entities.length; ++k) {
                     if(entities[k].type == CRATE) {
+                        if(entities[k].x < bullets[i].x) {
+                            entities[k].x++;
+                        } else {
+                            entities[k].x--;
+                        }
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
                             entities[k].x, entities[k].y, 32, 32)) {
                             bullets[i].alive = false;
                             fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
                         }
+
                     }
                 }
             }

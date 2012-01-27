@@ -20,8 +20,12 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
         var trigger = this.get_trigger();
         if(this.state == OPEN && trigger.state == OPEN) {
             if(contains(player.x, player.y + 18, 32, 32, this.x, this.y, 32, 32)) {
-                player.x = trigger.x;
-                player.y = trigger.y - 18;
+                if(map[trigger.y_tile - 1][trigger.x_tile] > 1) {
+                    y_modified = trigger.y;
+                } else {
+                    y_modified = trigger.y - 20;
+                }
+                player.teleport(trigger.x, y_modified);
                 trigger.state = CLOSED;
                 this.state = CLOSED;
                 this.current_anim = teleporter_anim[CLOSED];

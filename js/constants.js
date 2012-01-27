@@ -85,8 +85,8 @@
     var max_enemy_bullets = 100;
     var enemy_bullets = new Array(max_enemy_bullets);
     var enemy_anim = new Array();
-    enemy_anim[WALK_RIGHT] = [3, 4, 5];
-    enemy_anim[WALK_LEFT] = [0, 1, 2];
+    enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
+    enemy_anim[WALK_LEFT] = [0, 1, 2, 3];
     enemy_anim[STAND] = [6, 6, 6];
 
     // particles
@@ -156,9 +156,11 @@
     var images = new Array();
     images['crate_1'] = new Image();
     images['switch_1'] = new Image();
+    images['switch_2'] = new Image();
     images['door_1'] = new Image();
     images['door_2'] = new Image();
     images['door_3'] = new Image();
     images['door_4'] = new Image();
     images['jetpack_icon'] = new Image();
-    images['teleport_1'] = new Image();
+images['teleport_1'] = new Image();
+images['teleport_2'] = new Image();

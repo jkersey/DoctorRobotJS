@@ -6,11 +6,13 @@ function load_images() {
     //map_img.src = 'images/map.png';
     map_img.src = 'images/Infiltrator.png';
     bullet_img.src = 'images/bullet.png';
-    enemy_img.src = 'images/enemy_1.png';
+    enemy_img.src = 'images/enemy_1b.png';
     enemy_2_img.src = 'images/enemy_2.png';
     parallax_img.src = 'images/parallax.png';
     images['switch_1'].src = 'images/switch_1.png';
+    images['switch_2'].src = 'images/switch_2.png';
     images['teleport_1'].src = 'images/teleport_1.png';
+    images['teleport_2'].src = 'images/teleport_2.png';
     images['crate_1'].src = 'images/crate_1.png';
     images['door_1'].src = 'images/door_1.png';
     images['door_2'].src = 'images/door_2.png';

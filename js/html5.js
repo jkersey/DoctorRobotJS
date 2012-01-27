@@ -55,6 +55,7 @@ function game_loop() {
     if(player.y + window_y > canvas.height - 100) {
         window_y -= 8;
     }
+
     clear_screen();
     //draw_parallax();
     draw_map();

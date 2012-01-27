@@ -77,9 +77,14 @@ function make_entity(x, y, type, parent_type) {
     if(map[y][x-1] == 48) {
         // left switch
         return build_switch(x, y, SWITCH, images['switch_1'], EMPTY, type);
+    } else if (map[y][x+1] == 48) {
+        // right switch
+        return build_switch(x, y, SWITCH, images['switch_2'], EMPTY, type);
     } else if(map[y+1][x] == 49) {
         // teleport pad
         return build_teleporter(x, y, TELEPORTER, images['teleport_1'], EMPTY, type, parent_type);
+    } else if(map[y-1][x] == 49) {
+        return build_teleporter(x, y, TELEPORTER, images['teleport_2'], EMPTY, type, parent_type);
     } else if(map[y-1][x] == 64) {
         console.log('made a top door');
         return build_door(x, y, DOOR, images['door_1'], EMPTY_BLOCKING, type);

@@ -154,8 +154,8 @@ function move_enemy_bullets() {
     enemy_bullet_timer++;
     var y_offset;
 
-    if(crouching) {
-        y_offset = 30;
+    if(player.crouching) {
+        y_offset = 25;
     } else {
         y_offset = 10;
     }
@@ -171,7 +171,7 @@ function move_enemy_bullets() {
                 enemy_bullets[i].alive = false;
 				fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
             } else {
-                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, player.x + 10, robot_y_top, 12, 48 - y_offset)) {
+                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, player.x + 10, robot_y_top, 12, 30)) {
                     //enemies[j].alive = false;
                     enemy_bullets[i].alive = false;
                     fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
