@@ -2,16 +2,55 @@
 <html>
 <head>
 <style type="text/css">
-    body {background: #111; margin:50px 0; padding:0;text-align: center;}
-    #canvas { margin: auto; border: 2px solid #444;}
+    body {background: #060606; margin:50px 0; padding:0;text-align: center; font-family: Trebuchet, Helvetica, Arial, Verdana;  color: silver;}
+	h2 { margin-top: 0px; }
+	a:link, a:hover, a:visited { color: gray; }
+	.text-content { padding-left: 10px; text-align: left;}
+	.tiny { font-family: Verdana; font-size: 10px; text-align: left; }
+	.copyright { font-size: 10px; }
+	td { vertical-align: top; }
+	#google_ad { margin: auto; }
+    #canvas-table { margin: auto; }
+    #canvas { border: 2px solid #444;}
+    hr { background: #def; border: 0px solid #def; height: 2px; width: 960px;margin-top: 0; padding: 0;}
 </style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-28044627-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
 </head>
-<body><canvas id="canvas" height="320" width="400"></canvas>
+<body>
+<div id="google-ad">
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-6385884773082928";
+/* badbattery header */
+google_ad_slot = "1125901147";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<!--<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">-->
+</script>
+</div>
+<table id="canvas-table"><tr>
+        <td width="400">
+<canvas id="canvas" height="320" width="400"></canvas>
 
 <script type="text/javascript" src="js/constants.js"></script>
 <script type="text/javascript" src="js/UI.js"></script>
 <script type="text/javascript" src="js/Player.js"></script>
 <script type="text/javascript" src="js/Bullets.js"></script>
+<script type="text/javascript" src="js/Fluid.js"></script>
 <script type="text/javascript" src="js/Crate.js"></script>
 <script type="text/javascript" src="js/Switch.js"></script>
 <script type="text/javascript" src="js/Door.js"></script>
@@ -28,6 +67,31 @@
 <script type="text/javascript" src="js/Entity.js"></script>
 <script type="text/javascript" src="js/EnemyBullets.js"></script>
 <script type="text/javascript" src="js/html5.js"></script>
+</td><td width="400" class="text-content">
+    <h3 style="margin-top: 0px; margin-bottom: 0px;">Welcome to the alpha version of</h3>
+    <h2 style="margin-top: 0px; ">Doctor Robot!</h2>
 
-</body>
-</html>
+    <h4 style="margin-bottom: 10px; padding-bottom: 0px;">Next update:</h4>
+    <ol style="margin-top: 0px; padding-top: 0px;">
+    <li>Pushable crates</li>
+    <li>Floor switches</li>
+    <li>Online Level Editor!</li>
+    </ol>
+    <br />
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    <div class="tiny">
+    Keys
+    <table><tr><td>z</td><td>: Jump/Jetpack</td></tr>
+    <tr><td>x</td><td>: Fire</td></tr>
+    <tr><td>down arrow</td><td>: Crouch</td></tr>
+    </table>
+    Hints:<br>
+    <ul>
+    <li>You can crouch under enemy bullets.</li>
+    <li>I haven't added graphics for the jumping pads, so they'll sneak up on you.</li>
+    <li>You can crush bad guys in doors.</li>
+    </ul>
+    </div>
+    </td></tr></table>
+    </body>
+    </html>

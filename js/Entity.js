@@ -33,9 +33,15 @@ function Entity(x_t, y_t, tp, img, tile, key) {
                 }
             }
             if(this && this.image) {
-                ctx.drawImage(this.image,
-                    this.current_anim[this.frame] * 32, 0, 32, 32,
-                    this.x + window_x,this.y + window_y, 32, 32);
+                if(this.type == 13) {
+                    ctx.drawImage(this.image,
+                        this.current_anim[this.frame] * 32, 32, 32, 32,
+                        this.x + window_x,this.y + window_y, 32, 32);
+                } else {
+                    ctx.drawImage(this.image,
+                        this.current_anim[this.frame] * 32, 0, 32, 32,
+                        this.x + window_x,this.y + window_y, 32, 32);
+                }
             }
         }
 
@@ -104,7 +110,11 @@ function make_entity(x, y, type, parent_type) {
         console.log('made a crate');
         return build_crate(x, y, type, images['crate_1'], EMPTY);
     } else if (type == '15') {
+        console.log('made an exit');
         return build_exit(x, y, type, null, EMPTY);
+    } else if (type == FLUID || type == 13) {
+        console.log('made some fluid');
+        return build_fluid(x, y, type, images['fluid_1'], EMPTY);
     } else if (type == JUMPER) {
         return build_jumper(x, y, type, null, EMPTY);
     } else {

@@ -6,6 +6,14 @@
  * To change this template use File | Settings | File Templates.
  */
 
+var game_state;
+var INITIALIZE = 0;
+var START = 1;
+var PAUSE = 2;
+var MENU = 3;
+var INTERSTITIAL = 4;
+
+
     var SWITCH = 256;
     var DOOR = 257;
     var TELEPORTER = 258;
@@ -26,6 +34,9 @@
     var JETPACK = 9;
     var JUMPER = 10;
     var CRATE = 11;
+    var FLUID = 12;
+
+    var fluid_anim = [0, 1, 2, 3];
 
     var SWITCH_LEFT = 32;
     var SWITCH_FLOOR = 33;
@@ -145,6 +156,7 @@
 
     // images
     var alert_jetpack_img = new Image();
+    var hud_img = new Image();
     var font_img = new Image();
     var tile_img = new Image();
     var dude_img = new Image();
@@ -161,6 +173,8 @@
     images['door_2'] = new Image();
     images['door_3'] = new Image();
     images['door_4'] = new Image();
+    images['fluid_1'] = new Image();
     images['jetpack_icon'] = new Image();
-images['teleport_1'] = new Image();
-images['teleport_2'] = new Image();
+    images['teleport_1'] = new Image();
+    images['teleport_2'] = new Image();
+    images['fuel_overlay'] = new Image();

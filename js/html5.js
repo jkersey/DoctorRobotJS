@@ -16,7 +16,10 @@ function init() {
 
 function initialize_data() {
 
-    load_images();
+    image_manager = new ImageManager();
+    image_manager.load_images();
+
+    //load_images();
     enemies = new Array();
     entities = new Array();
     enemy_bullets = new Array(max_enemy_bullets);
