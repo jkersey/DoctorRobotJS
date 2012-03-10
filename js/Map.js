@@ -4,8 +4,8 @@ function load_map(level) {
         current_level = 0;
     }
     var request = new XMLHttpRequest();
-    request.open('GET', 'http://scoab/maps/level_'+level+'.txt');
-    //request.open('GET', 'http://badbattery.com/maps/level_'+level+'.txt');
+    request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
+    //request.open('GET', 'http://badbattery.com/play/doctor-robot/maps/level_'+level+'.txt');
     request.onreadystatechange = function() {
         if (request.readyState != 4 || request.status != 200) {
           return;
