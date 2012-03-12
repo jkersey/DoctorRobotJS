@@ -95,7 +95,7 @@ function showSplashScreen() {
 }
 
 function draw_parallax() {
-    ctx.drawImage(parallax_img, 0, 0, 512, 512, window_x >> 4, window_y >> 4, 512, 512);
+    ctx.drawImage(parallax_img, 0, 0, 512, 512, window_x >> 4 - 5, window_y >> 4, 512, 512);
 }
 
 
