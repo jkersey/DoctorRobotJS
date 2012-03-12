@@ -1,6 +1,10 @@
 function get_input() {
-    if(88 in keys && keys[88]){
-        if(player.alive) {
+
+    key_pressed = keys.length > 0;
+    console.log(key_pressed);
+
+    if (88 in keys && keys[88]) {
+        if (player.alive) {
             dude_fire();
         }
     }
@@ -23,7 +27,7 @@ function get_input() {
         player.down = false;
         crouching = false;
     }
-    if(90 in keys && keys[90]){
+    if (90 in keys && keys[90]) {
         player.up = true;
     } else {
         player.up = false;

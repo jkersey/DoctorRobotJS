@@ -1,10 +1,13 @@
 function ImageManager() {
 
     var images_loaded = 0;
+    var directory = "/play/doctor-robot/images/";
+
+    this.load_splash_screen_img = function() {
+        splash_screen_img.src = directory + 'splash_screen.png';
+    };
 
     this.load_images = function() {
-
-        var directory = "/play/doctor-robot/images/";
 
         alert_jetpack_img.src = directory + 'jetpack.png';
         font_img.src = directory + 'small_font.gif';

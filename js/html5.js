@@ -9,6 +9,7 @@ code tile switches
 function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
+    image_manager = new ImageManager();
     ctx.mozImageSmoothingEnabled = false;
     current_level = 0;
     load_map("0");
@@ -16,7 +17,6 @@ function init() {
 
 function initialize_data() {
 
-    image_manager = new ImageManager();
     image_manager.load_images();
 
     //load_images();
@@ -46,34 +46,52 @@ function game_loop() {
     get_input();
     move_stuff();
 
-    if(player.x + window_x < 200) {
-        window_x += 3;
-    }
-    if(player.x + window_x > canvas.width - 200) {
-        window_x -= 3;
-    }
-    if(player.y + window_y <  100) {
-        window_y += 8;
-    }
-    if(player.y + window_y > canvas.height - 100) {
-        window_y -= 8;
+
+    if(game_state == INITIALIZE) {
+        showSplashScreen();
+    } else if(game_state == RUNNING) {
+
+        if(player.x + window_x < 200) {
+            window_x += 3;
+        }
+        if(player.x + window_x > canvas.width - 200) {
+            window_x -= 3;
+        }
+        if(player.y + window_y <  100) {
+            window_y += 8;
+        }
+        if(player.y + window_y > canvas.height - 100) {
+            window_y -= 8;
+        }
+
+        clear_screen();
+        draw_parallax();
+        draw_map();
+        draw_particles();
+        draw_bullets();
+        if(player.alive) {
+            player.draw();
+        }
+        draw_enemies();
+        draw_entities();
+        draw_enemy_bullets();
+        draw_hud();
+        if(reset_level) {
+            resetting_level();
+        }
     }
 
-    clear_screen();
-    //draw_parallax();
-    draw_map();
-	draw_particles();
-    draw_bullets();
-    if(player.alive) {
-        player.draw();
+}
+
+function showSplashScreen() {
+
+    if(splashScreen == null) {
+        splashScreen = new SplashScreen();
+        splashScreen.load_image();
+        console.log("made a splash screen");
     }
-    draw_enemies();
-    draw_entities();
-    draw_enemy_bullets();
-    draw_hud();
-    if(reset_level) {
-        resetting_level();
-    }
+    splashScreen.update();
+    splashScreen.draw();
 }
 
 function draw_parallax() {

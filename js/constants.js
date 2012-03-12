@@ -9,9 +9,12 @@
 var game_state;
 var INITIALIZE = 0;
 var START = 1;
-var PAUSE = 2;
-var MENU = 3;
-var INTERSTITIAL = 4;
+var RUNNING = 2;
+var PAUSE = 3;
+var MENU = 4;
+var INTERSTITIAL = 5;
+
+game_state = INITIALIZE;
 
 
     var SWITCH = 256;
@@ -86,6 +89,9 @@ var INTERSTITIAL = 4;
     var OPEN = 1;
     var CLOSED = 0;
 
+var splashScreen;
+var key_pressed;
+
     var teleporter_anim = new Array();
     teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
     teleporter_anim[CLOSED] = [5, 5, 5];
@@ -155,6 +161,7 @@ var INTERSTITIAL = 4;
 
 
     // images
+var splash_screen_img = new Image();
     var alert_jetpack_img = new Image();
     var hud_img = new Image();
     var font_img = new Image();
