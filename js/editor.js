@@ -3,31 +3,16 @@ var current_tile = 1;
 var key_delay = 5;
 var key_timer = 11;
 
-var map = [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,1,1,1,1],
-           [1,1,1,1,1,1,1,2,2,2,2,2,2,2,7,2,2,3,0,0,2,2,2,2,2,2,2,2,2,2,0,0,0,2,2,2,2,2,2,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,22,27,27,22,23,0,0,5,5,0,0,0,0,0,0,0,5,0,0,0,5,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,4,4,4,0,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,-1,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,22,0,0,5,5,0,0,0,0,0,0,0,5,0,0,0,5,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,4,4,4,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,3,0,0,5,5,0,0,0,0,0,0,0,5,0,0,0,5,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,1,1,1,1,1,1,4,4,4,0,-1,0,0,0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-           [1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
-           ];
+var map;
+var map_name;
+
+var current_level;
+
+var MONSTER_SET = 0;
+var CONTROL_SET = 1;
+var TILE_SET = 2;
+
+var current_set = CONTROL_SET;
 
 var WALK_LEFT = 0;
 var WALK_RIGHT = 1;
@@ -57,11 +42,46 @@ var map_img = new Image();
 var bullet_img = new Image();
 var menu_background_img = new Image();
 
+
+function load_map(level) {
+    current_level = level;
+    var request = new XMLHttpRequest();
+    //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
+    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    console.log(url);
+    request.open('GET', url);
+    request.onreadystatechange = function() {
+        if (request.readyState != 4 || request.status != 200) {
+          return;
+        }
+        parse_map(request.responseText);
+    };
+    request.send(null);
+}
+
+function parse_map(map_data) {
+    var rows = map_data.split('\n');
+    map = new Array(rows.length - 1);
+    map_name = rows[0];
+    console.log(current_level + ":" + map_name);
+    for(var y = 1; y < rows.length; ++y) {
+        var cols = rows[y].split(',');
+        map[y-1] = new Array(cols.length);
+        for(var x = 0; x < cols.length; ++x) {
+            map[y-1][x] = cols[x] - 1;
+        }
+    }
+    console.log(map);
+
+    map_loaded = true;
+}
+
+
 function load_images() {
     font_img.src = 'images/small_font.gif';
     tile_img.src = 'images/tiles.png';
     dude_img.src = 'images/dude.png';
-    map_img.src = 'images/map.png';
+    map_img.src = 'images/Infiltrator.png';
     bullet_img.src = 'images/bullet.png';
     enemy_img.src = 'images/enemy_1.png';
     menu_background_img.src = 'images/menu_background.png';
@@ -74,7 +94,6 @@ function pixel_to_tile(x, y) {
 }
 
 function set_tile(x, y) {
-    //console.log("setting tile");
     x_tile = x >> 5;
     y_tile = y >> 5;
     map[y_tile][x_tile] = current_tile;
@@ -84,19 +103,15 @@ function draw_tiles() {
 
     for(var i = 0; i < 20; ++i) {
         var sx = i%10 * 32;
-        var sy = Math.floor(i/10) * 32;
+        var sy = Math.floor(i/16) * 32;
         ctx.drawImage(map_img, sx, sy, 32, 32, i * 32, 0, 32, 32);
     }
 }
 
 function draw_current_tile() {
-    if(current_tile >= 0) {
-        var sx = current_tile%10 * 32;
-        var sy = Math.floor(current_tile/10) * 32;
+        var sx = current_tile%16 * 32;
+        var sy = Math.floor(current_tile/16) * 32;
         ctx.drawImage(map_img, sx, sy, 32, 32, 16, 8, 32, 32);
-    } else {
-        ctx.drawImage(enemy_img, 0, 0, 32, 32, 16, 8, 32, 32);
-    }
 }
 
 var inertiaY = 0;
@@ -112,6 +127,8 @@ var waitIndex = 0;
 var canvas = null;
 var ctx = null;
 var keys = new Array();
+
+var mouse_down = false;
 
 // shim layer with setTimeout fallback
 window.requestAnimFrame = (function(){
@@ -137,11 +154,27 @@ function init() {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     canvas.addEventListener('mousedown', event_mousedown, false);
+    canvas.addEventListener('mousemove', event_mousemove, false);
+    canvas.addEventListener('mouseup', event_mouseup, false);
     animate();
 }
 
 function event_mousedown(event) {
+    draw_tile(event);
+    mouse_down = true;
+}
 
+function event_mouseup(event) {
+    mouse_down = false;
+}
+
+function event_mousemove(event) {
+    if(mouse_down == true){
+        draw_tile(event);
+    }
+}
+
+function draw_tile(event) {
     var x;
     var y;
 
@@ -192,39 +225,46 @@ function menu_images(x, y) {
 
 function game_loop() {
     get_input();
-    move_stuff();
     clear_screen();
     draw_map();
-    draw_dude();
-    draw_enemies();
     draw_hud();
-}
-
-function move_stuff() {
-    inertiaY = inertiaY + gravity;
-    robotY += inertiaY;
-    if(pixel_to_tile(robotX, robotY+48) > 0 || pixel_to_tile(robotX + 32, robotY + 48) > 0
-        || pixel_to_tile(robotX, robotY+15) > 0 || pixel_to_tile(robotX + 32, robotY+15) > 0) {
-        robotY -= inertiaY;
-        inertiaY = 0;
-    }
 }
 
 function draw_menu_tiles() {
     var x_start = 230;
-    for(var i = 0; i < 40; ++i) {
-        var sx = i%10 * 32;
-        var sy = Math.floor(i/10) * 32;
-        ctx.drawImage(map_img, sx, sy, 32, 32, x_start + (i%20 * 32), Math.floor(i/20) * 32, 32, 32);
+    if(current_set == MONSTER_SET) {
+        menu_offset = 0;
+        min_i = 0;
+        max_i = 16;
+    } else if(current_set == CONTROL_SET) {
+        menu_offset = 16;
+        min_i = 16;
+        max_i = 48;
+    } else if(current_set == TILE_SET) {
+        menu_offset = 96;
+        min_i = 96;
+        max_i = 200;
+    }
+    var inc = 0;
+    for(var i = min_i; i < max_i; ++i) {
+        var sx = i%16 * 32;
+        var sy = Math.floor(i/16) * 32;
+        ctx.drawImage(map_img, sx, sy, 32, 32, x_start + (inc%16 * 16), Math.floor(inc/16) * 16, 16, 16);
+        inc++;
     }
 }
 
 function menu_pixel_to_tile(x, y) {
-    x_tile = x >> 5;
-    y_tile = y >> 5;
-    console.log("selected tile: " + y_tile + ":" + x_tile);
-    console.log("selected tile: " + y_tile * 20 + x_tile);
-    current_tile = y_tile * 20 + x_tile;
+    x_tile = x >> 4;
+    y_tile = (y + menu_offset) >> 4;
+    console.log("selected tile: " + x_tile + ":" + y_tile);
+    console.log("selected tile: " + y_tile * 16 + x_tile);
+    current_tile = y_tile * 16 + x_tile;
+}
+
+function changeTiles(id) {
+    current_set = id;
+    draw_menu_tiles();
 }
 
 function draw_hud() {
@@ -236,23 +276,6 @@ function draw_hud() {
     draw_current_tile();
     draw_menu_tiles();
     //draw_text("key  id: " + current_key_id, 40, 18);
-}
-
-function fire_particles(x, y, size) {
-	num_particles = 10;
-	for(i = 0; i < max_particles; ++i) {
-		if(!particles[i]['alive']) {
-			particles[i]['alive'] = true;
-			particles[i]['x'] = x;
-			particles[i]['y'] = y;
-			particles[i]['age'] = 0;
-            particles[i]['size'] = size;
-			num_particles--;
-			if(num_particles < 0) {
-				break;
-			}
-		}
-	}
 }
 
 function drawRectangle(x, y, w, h, fill) {
@@ -271,7 +294,32 @@ function draw_enemies() {
     }
 }
 
+function map_iterate(func) {
+    if(map) {
+    for(y = 0; y<map.length; y++) {
+        for(x = 0; x< map[0].length; x++) {
+            func(x, y);
+        }
+    }
+    }
+}
+
 function draw_map() {
+    map_iterate(function(x, y) {
+        var x_pos = window_x + x * 32;
+        var y_pos = window_y + y * 32;
+        if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
+            var index = map[y][x];
+            var sx = index%16 * 32;
+            var sy = Math.floor(index/16) * 32;
+            ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
+        }
+    });
+}
+
+
+function draw_map2() {
+    if(map) {
     for(y = 0; y<map.length; y++) {
         for(x = 0; x< map[0].length; x++) {
             var x_pos = window_x + x * 32;
@@ -291,12 +339,7 @@ function draw_map() {
             }
         }
     }
-}
-
-
-function draw_dude() {
-    ctx.drawImage(dude_img, 0, 0, 32, 48,
-        robotX + window_x,robotY + window_y, 32, 48);
+    }
 }
 
 function draw_text(str, x, y) {
@@ -317,14 +360,23 @@ function get_input() {
         dude_fire();
     }
     standing = true;
-    if ((37 in keys && keys[37]) || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
-        //robotX -= 2;
-        window_x += 16;
-    }
-    if ((39 in keys && keys[39]) || (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
-        //robotX += 2;
-        window_x -= 16;
-    }
+        if ((37 in keys && keys[37]) || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
+            //robotX -= 2;
+            window_x += 16;
+        }
+        if ((39 in keys && keys[39]) || (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
+            //robotX += 2;
+            window_x -= 16;
+        }
+        if ((38 in keys && keys[38]) || (21 in keys && keys[21]) || (65 in keys && keys[65])){ //left
+            //robotX -= 2;
+            window_y += 16;
+        }
+        if ((40 in keys && keys[40]) || (22 in keys && keys[22]) || (68 in keys && keys[68])){ //right
+            //robotX += 2;
+            window_y -= 16;
+        }
+
     if ((219 in keys && keys[219]) || (219 in keys && keys[219]) || (219 in keys && keys[219])){ //right
         if(current_tile > 0) {
             current_tile--;
@@ -344,23 +396,28 @@ function clear_screen() {
     ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
 }
 
+function list_maps() {
+    // jquery get maps from server
+}
+
 function save_map() {
-    map_string = "[";
+    var map_string = '';
     for(y = 0; y<map.length; y++) {
-        map_string += "[";
         for(x = 0; x< map[0].length; x++) {
-            map_string += map[y][x];
+            map_string += (map[y][x]) + 1;
             if (x < map[0].length - 1) {
                 map_string += ",";
             }
         }
-        map_string += "]";
-        if (y < map.length - 1) {
-            map_string += ",";
-        }
+        map_string += "\n";
     }
-    map_string += "]\n";
     console.log(map_string);
+
+    $.post("http://scoab/play/doctor-robot/DoctorRobot.php?saveMap",{id:current_level, tiles:map_string, name:"mud"},function(data) {
+       alert(data);
+     });
+    return false;
+
 }
 
 window.onload = init;

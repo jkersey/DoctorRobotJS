@@ -1,8 +1,24 @@
 <html>
 <head>
+    <script src="http://code.jquery.com/jquery.min.js" type="text/javascript"></script>
 </head>
 <body>
-<canvas id="canvas" height="960" width="960"></canvas>
+<table><tr><td>
+<canvas id="canvas" height="400" width="600"></canvas>
+</td><td valign="top">
+<form action="/" method="post" onsubmit="load_map(document.getElementById('level_id').value); return false;">
+    <input id="level_id" type="text" name="id" />
+    <input type="submit">
+</form>
+<form action="/" method="post" onsubmit="save_map(); return false;">
+    <input type="submit" value="Save Map">
+</form>
+<select name="sets" id="sets" onchange="changeTiles(this.value); draw_menu_tiles();">
+    <option value="0">Control</option>
+    <option value="1">Monster</option>
+    <option value="2">Tiles</option>
+</select>
+</td></tr></table>
 <script type="text/javascript" src="js/editor.js"></script>
 </body>
 </html>
