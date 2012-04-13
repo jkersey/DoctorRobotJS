@@ -42,8 +42,13 @@ class Map {
 
     function getMapsByUserId($segments)
     {
+        $r = '';
         $userId = $segments[1];
-
+        $result = $this->database->getByUserId("map", $userId);
+        while ($row = mysql_fetch_assoc($result)) {
+            $r .= sprintf("%s|%s\n",$row["name"], $row["id"]);
+        }
+        return $r;
     }
 
 

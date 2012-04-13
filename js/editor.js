@@ -243,7 +243,7 @@ function draw_menu_tiles() {
     } else if(current_set == TILE_SET) {
         menu_offset = 96;
         min_i = 96;
-        max_i = 200;
+        max_i = 160;
     }
     var inc = 0;
     for(var i = min_i; i < max_i; ++i) {
@@ -252,6 +252,21 @@ function draw_menu_tiles() {
         ctx.drawImage(map_img, sx, sy, 32, 32, x_start + (inc%16 * 16), Math.floor(inc/16) * 16, 16, 16);
         inc++;
     }
+}
+
+function get_maps_by_user_id(user_id)
+{
+    $.get("DoctorRobot.php?getMapsByUserId|" + user_id, {}, function(data) {
+        var options = $("#level_id");
+        var lines = data.split("\n");
+        options.append("<option value='0'>Select a Map</option>");
+        for(var i = 0; i < lines.length; ++i) {
+            var line = lines[i].split("|");
+            options.append("<option value='" + line[1] + "'>" + line[0] + "</option>");
+        }
+
+    });
+
 }
 
 function menu_pixel_to_tile(x, y) {
@@ -414,12 +429,12 @@ function save_map() {
     console.log(map_string);
 
     $.post("http://scoab/play/doctor-robot/DoctorRobot.php?saveMap",{id:current_level, tiles:map_string, name:"mud"},function(data) {
-       alert(data);
+       alert("Map saved");
      });
     return false;
 
 }
-
+get_maps_by_user_id(1);
 window.onload = init;
 window.addEventListener('keydown',keyDown,true);
 window.addEventListener('keyup',keyUp,true);
