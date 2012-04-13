@@ -6,8 +6,9 @@
 <table><tr><td>
 <canvas id="canvas" height="400" width="600"></canvas>
 </td><td valign="top">
-<form action="/" method="post" onsubmit="load_map(document.getElementById('level_id').value); return false;">
-    <input id="level_id" type="text" name="id" />
+<form action="/" method="post">
+    <select id="level_id" name="id" onchange="load_map(this.value); return false;">">
+    </select>
     <input type="submit">
 </form>
 <form action="/" method="post" onsubmit="save_map(); return false;">

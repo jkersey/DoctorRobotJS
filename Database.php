@@ -57,6 +57,14 @@ class Database {
 
     }
 
+    public function getByUserId($table, $userId)
+    {
+        $this->connectToDatabase();
+        $query = "SELECT * FROM " . $table . " where user_id=" . $userId;
+        $result = mysql_query($query) or die('Query failed: ' . mysql_error());
+        return $result;
+    }
+
 }
 
 
