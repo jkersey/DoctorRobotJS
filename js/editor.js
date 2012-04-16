@@ -38,6 +38,7 @@ var font_img = new Image();
 var tile_img = new Image();
 var dude_img = new Image();
 var enemy_img = new Image();
+var brain_1_img = new Image();
 var map_img = new Image();
 var bullet_img = new Image();
 var menu_background_img = new Image();
@@ -84,6 +85,7 @@ function load_images() {
     map_img.src = 'images/Infiltrator.png';
     bullet_img.src = 'images/bullet.png';
     enemy_img.src = 'images/enemy_1.png';
+    brain_1_img.src = 'images/brain_1.png';
     menu_background_img.src = 'images/menu_background.png';
 }
 
@@ -239,7 +241,7 @@ function draw_menu_tiles() {
     } else if(current_set == CONTROL_SET) {
         menu_offset = 16;
         min_i = 16;
-        max_i = 48;
+        max_i = 80;
     } else if(current_set == TILE_SET) {
         menu_offset = 96;
         min_i = 96;

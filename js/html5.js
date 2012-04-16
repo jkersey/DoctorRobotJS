@@ -12,6 +12,7 @@ var map_name = "";
 var GET_READY = 999999;
 var GAME_OVER = 999998;
 var CREDITS =   999997;
+var LEVEL_END = 999996;
 
 var interstitialId = 0;
 
@@ -22,22 +23,35 @@ var TELEPORTER = 258;
 var map;
 var map_loaded = false;
 var current_level = '1';
+var current_boss;
 
 var TILE_WIDTH = 32;
 
 // control tiles
-var EMPTY = 0;
-var PLAYER_START = 1;
-var ENEMY_1_START = 3;
-var ENEMY_2_START = 4;
+var T_EMPTY = 0;
+var T_PLAYER_START = 1;
+var T_ENEMY_1_START = 3;
+var T_ENEMY_2_START = 4;
+var T_ENEMY_3_START = 5;
+var T_ENEMY_4_START = 6;
+
+var T_BOSS_1_START = 7;
+var T_JETPACK = 9;
+var T_JUMPER = 10;
+var T_CRATE = 11;
+var T_FLUID = 12;
+var T_EXIT = 15;
+
+
 var EMPTY_BLOCKING = 255;
 
-var JETPACK = 9;
-var JUMPER = 10;
-var CRATE = 11;
-var FLUID = 12;
 
 var fluid_anim = [0, 1, 2, 3];
+
+var E_TELEPORTER = 49;
+var E_SWITCH = 48;
+var E_DOOR = 64;
+
 
 var SWITCH_LEFT = 32;
 var SWITCH_FLOOR = 33;
@@ -87,6 +101,7 @@ var CLOSED = 0;
 
 var splashScreen;
 var interstitial;
+var level_end;
 var gameover;
 var key_pressed;
 
@@ -104,8 +119,17 @@ enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
 enemy_anim[WALK_LEFT] = [0, 1, 2, 3];
 enemy_anim[STAND] = [6, 6, 6];
 
+var BOSS_FULL = 0;
+var BOSS_HALF = 1;
+var BOSS_EMPTY = 2;
+
+var boss_anim = new Array();
+boss_anim[BOSS_FULL] = [0, 1, 2, 3, 4];
+boss_anim[BOSS_HALF] = [5, 6, 7, 8, 9];
+boss_anim[BOSS_EMPTY] = [10, 11, 12, 13, 14];
+
 // particles
-var max_particles = 1000;
+var max_particles = 500;
 var particles = new Array(max_particles);
 
 
@@ -171,6 +195,7 @@ var tile_img = new Image();
 var dude_img = new Image();
 var enemy_img = new Image();
 var enemy_2_img = new Image();
+var brain_1_img = new Image();
 var map_img = new Image();
 var bullet_img = new Image();
 var parallax_img = new Image();
@@ -235,6 +260,8 @@ function game_loop() {
         showSplashScreen();
     } else if(game_state == INTERSTITIAL) {
         showInterstitial();
+    } else if(game_state == LEVEL_END) {
+        showLevelEnd();
     } else if(game_state == RUNNING) {
 
         if(player.x + window_x < 200) {
@@ -292,6 +319,16 @@ function showInterstitial() {
     interstitial.draw();
 }
 
+function showLevelEnd() {
+
+    if(level_end == null) {
+        level_end = new LevelEnd();
+        level_end.load_image();
+    }
+    level_end.update();
+    level_end.draw();
+}
+
 function showGameOver() {
 
     if(gameover == null) {
@@ -335,6 +372,14 @@ function draw_hud() {
     drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
     ctx.drawImage(images['fuel_overlay'], 2, 2);
     draw_text(current_level + " " + map_name,100, 3);
+    if(current_boss) {
+        drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
+        draw_text("BRAIN BOSS", 40, 34);
+        if(current_boss.hit_points < 1) {
+            current_boss = null;
+        }
+    }
+
 }
 
 
@@ -366,11 +411,11 @@ function get_input() {
 //////////////////////////////////////////////////////////////////
 //  ENEMY
 
-function Enemy(x_t, y_t, tp, img) {
+function Enemy(x_t, y_t, type, img) {
 
     this.x_tile = x_t;
     this.y_tile = y_t;
-    this.type = tp;
+    this.type = type;
 
     this.x = this.x_tile * TILE_WIDTH;
     this.y = this.y_tile * TILE_WIDTH - 18;
@@ -378,7 +423,6 @@ function Enemy(x_t, y_t, tp, img) {
 
     this.image = img;
 
-    this.current_anim = enemy_anim[WALK_LEFT];
     this.frame = 0;
     this.state = ACTIVATED;
 
@@ -390,12 +434,22 @@ function Enemy(x_t, y_t, tp, img) {
     this.bullet_timer = 21;
 
     map[this.y_tile][this.x_tile] = 0;
+
+
+    if(type == T_BOSS_1_START) {
+        this.current_anim = boss_anim[BOSS_FULL];
+        this.hit_points = 100;
+    } else {
+        this.current_anim = enemy_anim[WALK_LEFT];
+        this.hit_points = 1;
+
+    }
 }
 
 function make_enemies() {
     for(var y = 0; y<map.length; y++) {
         for(var x = 0; x< map[0].length; x++) {
-            if(map[y][x] == ENEMY_1_START || map[y][x] == ENEMY_2_START) {
+            if(map[y][x] == T_ENEMY_1_START || map[y][x] == T_ENEMY_2_START || map[y][x] == T_BOSS_1_START) {
                 enemies.push(make_enemy(x, y, map[y][x]));
             }
         }
@@ -404,10 +458,12 @@ function make_enemies() {
 
 function make_enemy(x, y, type) {
 
-    if(type == 3) {
+    if(type == T_ENEMY_1_START) {
         image = enemy_img;
-    } else if (type == 4) {
+    } else if (type == T_ENEMY_2_START) {
         image = enemy_2_img;
+    } else if (type == T_BOSS_1_START){
+        image = brain_1_img;
     }
 
     return new Enemy(x, y, type, image);}
@@ -425,7 +481,7 @@ function move_enemies() {
         if(enemies[i].alive) {
             // check for crate intersections
             for(var k = 0; k < entities.length; ++k) {
-                if(entities[k].type == CRATE) {
+                if(entities[k].type == T_CRATE) {
                     if(intersect(enemies[i].x, enemies[i].y, 32, 48, entities[k].x, entities[k].y, 32, 32)) {
                         if(enemies[i].x < entities[k].x) {
                             enemies[i].x -=4;
@@ -470,10 +526,12 @@ function move_enemies() {
                     enemy_fire(enemies[i].x, enemies[i].y, enemies[i].direction);
                     enemies[i].bullet_timer = 0;
                 }
+                if(enemies[i].type != T_BOSS_1_START) {
                 if(enemies[i].direction == -1) {
                     enemies[i].current_anim = enemy_anim[WALK_RIGHT];
                 } else {
                     enemies[i].current_anim = enemy_anim[WALK_LEFT];
+                }
                 }
                 continue;  // we're done here, robot stops and shoots
             }
@@ -492,10 +550,14 @@ function move_enemies() {
                 enemies[i].direction = -enemies[i].direction;
             }
 
-            if(enemies[i].direction == -1) {
-                enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+            if(enemies[i].type == T_BOSS_1_START) {
+                //enemies[i].current_anim = boss_anim[BOSS_FULL];
             } else {
-                enemies[i].current_anim = enemy_anim[WALK_LEFT];
+                if(enemies[i].direction == -1) {
+                    enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+                } else {
+                    enemies[i].current_anim = enemy_anim[WALK_LEFT];
+                }
             }
         }
     }
@@ -535,7 +597,7 @@ function move_enemy_bullets() {
                 }
 
                 for(var k = 0; k < entities.length; ++k) {
-                    if(isOnScreen(entities[k]) && entities[k].type == CRATE) {
+                    if(isOnScreen(entities[k]) && entities[k].type == T_CRATE) {
                         if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
                             entities[k].x, entities[k].y, 32, 32)) {
                             enemy_bullets[i].alive = false;
@@ -646,6 +708,39 @@ function Interstitial() {
 }
 
 //////////////////////////////////////////////////////////////////
+//  LEVEL END
+
+function LevelEnd() {
+
+    var wait = 0;
+
+    this.load_image = function() {
+        image_manager.load_splash_screen_2_img();
+        console.log("loaded the level end graphic");
+    };
+
+    this.update = function() {
+        if(wait > 1000) {
+            console.log("over 1000");
+            if(key_pressed) {
+                console.log("key pressed");
+                load_map(current_level);
+                game_state = RUNNING;
+            }
+            wait = 0;
+        }
+        wait++;
+     };
+
+    this.draw = function() {
+        ctx.drawImage(splash_screen_img, 0, 0);
+        draw_text("CONTAMINATED HUMANS SAVED: 0", 40, 248);
+    };
+
+}
+
+
+//////////////////////////////////////////////////////////////////
 //  GAME_OVER
 
 function GameOver() {
@@ -658,12 +753,12 @@ function GameOver() {
     };
 
     this.update = function() {
-        if(wait > 300) {
-        if(key_pressed) {
-            game_state = INITIALIZE;
-            load_map(0);
-        }
-         wait = 0;
+        if(wait > 500) {
+            if(key_pressed) {
+                game_state = INITIALIZE;
+                load_map(0);
+            }
+             wait = 0;
         }
         wait++;
      };
@@ -684,8 +779,8 @@ function GameOver() {
 function build_player() {
 
     map_iterate(function(x, y) {
-        if(map[y][x] == PLAYER_START) {
-            player = make_entity(x, y, map[y][x], EMPTY, PLAYER_START);
+        if(map[y][x] == T_PLAYER_START) {
+            player = make_entity(x, y, map[y][x], T_EMPTY, T_PLAYER_START);
             // players are taller than normal stuff
             player.y -= 23;
         }
@@ -693,7 +788,7 @@ function build_player() {
 
     player.initialize = function() {
         map_iterate(function(x, y) {
-            if(map[y][x] == PLAYER_START) {
+            if(map[y][x] == T_PLAYER_START) {
                 this.x = x * 32;
                 this.y = y * 32 - 23;
                 map[y][x] = 0;
@@ -880,15 +975,27 @@ function move_bullets() {
                     if(enemies[j].alive) {
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
                             enemies[j].x + 10, enemies[j].y, 12, 48)) {
-                            enemies[j].alive = false;
-                            bullets[i].alive = false;
+                            enemies[j].hit_points -= 1;
                             fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
-                            fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
+                            bullets[i].alive = false;
+
+                            if(enemies[j].type == T_BOSS_1_START) {
+                                current_boss = enemies[j];
+                                if(enemies[j].hit_points < 33) {
+                                    enemies[j].current_anim = boss_anim[BOSS_EMPTY];
+                                } else if (enemies[j].hit_points < 66) {
+                                    enemies[j].current_anim = boss_anim[BOSS_HALF];
+                                }
+                            }
+                            if(enemies[j].hit_points <= 0) {
+                                enemies[j].alive = false;
+                                fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
+                            }
                         }
                     }
                 }
                 for(var k = 0; k < entities.length; ++k) {
-                    if(entities[k].type == CRATE) {
+                    if(entities[k].type == T_CRATE) {
                         if(entities[k].x < bullets[i].x) {
                             //entities[k].x++;
                         } else {
@@ -997,7 +1104,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
     entity.move = function() {
         for(var i = 0; i < entities.length; ++i) {
             if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
-                if(entities[i].type == CRATE) {
+                if(entities[i].type == T_CRATE) {
                     if(this.y > entities[i].y) {
                         entities.y--;
                     }
@@ -1080,7 +1187,7 @@ function build_door(x_t, y_t, tp, img, tile, key) {
             this.state = DEACTIVATED;
             this.current_anim = door_anim[DEACTIVATED];
             this.frame = 0;
-            map[this.y_tile][this.x_tile] = EMPTY;
+            map[this.y_tile][this.x_tile] = T_EMPTY;
         } else if(trigger.state == ACTIVATED && !this.state == ACTIVATED) {
             console.log("opening door");
             this.state = ACTIVATED;
@@ -1139,8 +1246,9 @@ function build_exit(x_t, y_t, tp, img, tile, key) {
         if (intersect(player.x, player.y+16,32, 32, this.x, this.y, 32, 32 )) {
             player.x = 33;
             player.y = 33;
+            console.log("EXITING");
             current_level++;
-            load_map(current_level);
+            game_state = LEVEL_END;
         }
     };
     return entity;
@@ -1314,7 +1422,7 @@ function draw_particles() {
 //  MAP
 
 function load_map(level) {
-    if(level > 6) {
+    if(level > 4) {
         game_state = GAME_OVER;
         current_level = 1;
     }
@@ -1439,6 +1547,7 @@ function ImageManager() {
         bullet_img.src = directory + 'bullet.png';
         enemy_img.src = directory + 'enemy_1b.png';
         enemy_2_img.src = directory + 'enemy_2.png';
+        brain_1_img.src = directory + 'brain_1.png';
         parallax_img.src = directory + 'parallax.png';
         images['switch_1'].src = directory + 'switch_1.png';
         images['switch_2'].src = directory + 'switch_2.png';
@@ -1604,8 +1713,8 @@ function Entity(x_t, y_t, tp, img, tile, key) {
 
 
 function make_entities() {
+    // make doors, switches and trampolines.
     // have to make switches before doors
-    // switches and trampolines
     map_iterate(function(x, y) {
         if(map[y][x] > 15 && map[y][x] < 32) {
             entities.push(make_entity(x, y, map[y][x], SWITCH));
@@ -1620,40 +1729,56 @@ function make_entities() {
         if(map[y][x] > 8 && map[y][x] < 16) {
             entities.push(make_entity(x, y, map[y][x], map[y][x]));
         }
-
-    })
+    });
 }
 
 function make_entity(x, y, type, parent_type) {
 
-    if(map[y][x-1] == 48) {
-        return build_switch(x, y, SWITCH, images['switch_1'], EMPTY, type);
-    } else if (map[y][x+1] == 48) {
-        return build_switch(x, y, SWITCH, images['switch_2'], EMPTY, type);
-    } else if(map[y+1][x] == 49) {
-        return build_teleporter(x, y, TELEPORTER, images['teleport_1'], EMPTY, type, parent_type);
-    } else if(map[y-1][x] == 49) {
-        return build_teleporter(x, y, TELEPORTER, images['teleport_2'], EMPTY, type, parent_type);
-    } else if(map[y-1][x] == 64) {
+    // Switches
+    if(map[y][x-1] == E_SWITCH) {
+        return build_switch(x, y, SWITCH, images['switch_1'], T_EMPTY, type);
+    } else if (map[y][x+1] == E_SWITCH) {
+        return build_switch(x, y, SWITCH, images['switch_2'], T_EMPTY, type);
+
+    // Teleporter
+    } else if(map[y+1][x] == E_TELEPORTER) {
+        return build_teleporter(x, y, TELEPORTER, images['teleport_1'], T_EMPTY, type, parent_type);
+    } else if(map[y-1][x] == E_TELEPORTER) {
+        return build_teleporter(x, y, TELEPORTER, images['teleport_2'], T_EMPTY, type, parent_type);
+
+    // Doors
+    } else if(map[y-1][x] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_1'], EMPTY_BLOCKING, type);
-    } else if(map[y+1][x] == 64) {
+    } else if(map[y+1][x] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_2'], EMPTY_BLOCKING, type);
-    } else if(map[y][x-1] == 64) {
+    } else if(map[y][x-1] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_3'], EMPTY_BLOCKING, type);
-    } else if(map[y][x+1] == 64) {
+    } else if(map[y][x+1] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_4'], EMPTY_BLOCKING, type);
-    } else if(type == JETPACK) {
-        return build_jetpack(x, y, type, images['jetpack_icon'], EMPTY);
-    } else if(type == CRATE) {
-        return build_crate(x, y, type, images['crate_1'], EMPTY);
-    } else if (type == '15') {
-        return build_exit(x, y, type, null, EMPTY);
-    } else if (type == FLUID || type == 13) {
-        return build_fluid(x, y, type, images['fluid_1'], EMPTY);
-    } else if (type == JUMPER) {
-        return build_jumper(x, y, type, images['jumper'], EMPTY);
+
+    // Jetpack
+    } else if(type == T_JETPACK) {
+        return build_jetpack(x, y, type, images['jetpack_icon'], T_EMPTY);
+
+    // Crate
+    } else if(type == T_CRATE) {
+        return build_crate(x, y, type, images['crate_1'], T_EMPTY);
+
+    // Exit
+    } else if (type == T_EXIT) {
+        return build_exit(x, y, type, null, T_EMPTY);
+
+    // Fluid
+    } else if (type == T_FLUID || type == 13) {
+        return build_fluid(x, y, type, images['fluid_1'], T_EMPTY);
+
+    // Jumper
+    } else if (type == T_JUMPER) {
+        return build_jumper(x, y, type, images['jumper'], T_EMPTY);
+
+    // Unknown
     } else {
-        return new Entity(x, y, type, images['door_2'], EMPTY);
+        return new Entity(x, y, type, images['door_2'], T_EMPTY);
     }
 }
 
