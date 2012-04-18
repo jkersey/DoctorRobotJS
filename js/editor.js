@@ -48,7 +48,7 @@ function load_map(level) {
     current_level = level;
     var request = new XMLHttpRequest();
     //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    var url = 'http://badbattery/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
@@ -430,7 +430,7 @@ function save_map() {
     }
     console.log(map_string);
 
-    $.post("http://scoab/play/doctor-robot/DoctorRobot.php?saveMap",{id:current_level, tiles:map_string, name:"mud"},function(data) {
+    $.post("http://badbattery/play/doctor-robot/DoctorRobot.php?saveMap",{id:current_level, tiles:map_string, name:"mud"},function(data) {
        alert("Map saved");
      });
     return false;

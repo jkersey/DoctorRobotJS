@@ -5,6 +5,8 @@ var INITIALIZE = 0;
 var RUNNING = 2;
 var INTERSTITIAL = 5;
 
+var timer = 0;
+
 game_state = INITIALIZE;
 var map_name = "";
 
@@ -36,6 +38,7 @@ var T_ENEMY_3_START = 5;
 var T_ENEMY_4_START = 6;
 
 var T_BOSS_1_START = 7;
+var T_PERSON = 8;
 var T_JETPACK = 9;
 var T_JUMPER = 10;
 var T_CRATE = 11;
@@ -193,6 +196,7 @@ var hud_img = new Image();
 var font_img = new Image();
 var tile_img = new Image();
 var dude_img = new Image();
+var people_img = new Image();
 var enemy_img = new Image();
 var enemy_2_img = new Image();
 var brain_1_img = new Image();
@@ -372,6 +376,8 @@ function draw_hud() {
     drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
     ctx.drawImage(images['fuel_overlay'], 2, 2);
     draw_text(current_level + " " + map_name,100, 3);
+
+    draw_timer();
     if(current_boss) {
         drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
         draw_text("BRAIN BOSS", 40, 34);
@@ -381,6 +387,15 @@ function draw_hud() {
     }
 
 }
+
+function draw_timer() {
+    var seconds = timer / 100 ;
+    var mm = ((seconds / 60) + "").split('.')[0];
+    var ss = ((seconds % 60) + "").split('.')[0];
+    timer++;
+    draw_text(mm + ":" + ss, 300, 3);
+}
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -455,6 +470,8 @@ function make_enemies() {
         }
     }
 }
+
+
 
 function make_enemy(x, y, type) {
 
@@ -1064,6 +1081,43 @@ function build_fluid(x_t, y_t, tp, img, tile, key) {
 }
 
 //////////////////////////////////////////////////////////////////
+//  PERSON
+
+function build_person(x_t, y_t, tp, img, tile, key) {
+
+    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    entity.is_teleportable = true;
+
+    entity.check_player = function() {
+        console.log("rescued a person");
+        this.alive = false;
+    };
+
+    entity.move = function() {
+        for(var i = 0; i < entities.length; ++i) {
+            if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
+                if(entities[i].type == T_CRATE) {
+                    if(this.y > entities[i].y) {
+                        entities.y--;
+                    }
+                    if(this.x > entities[i].x) {
+                        //this.x++;
+                        entities.x--;
+                    } else if(this.x < entities[i].x) {
+                        //this.x--;
+                        entities.x++;
+                    }
+
+                }
+            }
+        }
+    };
+
+    return entity;
+}
+
+
+//////////////////////////////////////////////////////////////////
 //  CRATE
 
 function build_crate(x_t, y_t, tp, img, tile, key) {
@@ -1428,7 +1482,7 @@ function load_map(level) {
     }
     var request = new XMLHttpRequest();
     //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    var url = 'http://badbattery/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
@@ -1546,6 +1600,7 @@ function ImageManager() {
         map_img.src = directory + 'Infiltrator.png';
         bullet_img.src = directory + 'bullet.png';
         enemy_img.src = directory + 'enemy_1b.png';
+        people_img.src = directory + 'people.png';
         enemy_2_img.src = directory + 'enemy_2.png';
         brain_1_img.src = directory + 'brain_1.png';
         parallax_img.src = directory + 'parallax.png';
@@ -1726,7 +1781,7 @@ function make_entities() {
         }
     });
     map_iterate(function(x, y) {
-        if(map[y][x] > 8 && map[y][x] < 16) {
+        if(map[y][x] > 7 && map[y][x] < 16) {
             entities.push(make_entity(x, y, map[y][x], map[y][x]));
         }
     });
@@ -1763,6 +1818,10 @@ function make_entity(x, y, type, parent_type) {
     // Crate
     } else if(type == T_CRATE) {
         return build_crate(x, y, type, images['crate_1'], T_EMPTY);
+
+    } else if(type == T_PERSON) {
+        console.log("building a person");
+        return build_person(x, y, type, people_img, T_EMPTY);
 
     // Exit
     } else if (type == T_EXIT) {
