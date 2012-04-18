@@ -27,6 +27,9 @@ var map_loaded = false;
 var current_level = '1';
 var current_boss;
 
+var saved_people = 0;
+var total_people = 0;
+
 var TILE_WIDTH = 32;
 
 // control tiles
@@ -130,6 +133,11 @@ var boss_anim = new Array();
 boss_anim[BOSS_FULL] = [0, 1, 2, 3, 4];
 boss_anim[BOSS_HALF] = [5, 6, 7, 8, 9];
 boss_anim[BOSS_EMPTY] = [10, 11, 12, 13, 14];
+
+var person_anim = new Array();
+person_anim[0] = [0];
+person_anim[1] = [1];
+person_anim[3] = [2, 3, 4, 5, 6, 7, 8, 9];
 
 // particles
 var max_particles = 500;
@@ -375,9 +383,10 @@ function draw_hud() {
     ctx.fillStyle = "#990000";
     drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
     ctx.drawImage(images['fuel_overlay'], 2, 2);
-    draw_text(current_level + " " + map_name,100, 3);
+    //draw_text(current_level + " " + map_name,100, 3);
 
     draw_timer();
+    draw_people_count();
     if(current_boss) {
         drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
         draw_text("BRAIN BOSS", 40, 34);
@@ -386,6 +395,10 @@ function draw_hud() {
         }
     }
 
+}
+
+function draw_people_count() {
+    draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
 }
 
 function draw_timer() {
@@ -1087,13 +1100,22 @@ function build_person(x_t, y_t, tp, img, tile, key) {
 
     var entity = new Entity(x_t, y_t, tp, img, tile, key);
     entity.is_teleportable = true;
+    total_people++;
 
     entity.check_player = function() {
-        console.log("rescued a person");
-        this.alive = false;
+        if(this.state != 9) {
+            saved_people++;
+            this.frame = 0;
+            this.current_anim = person_anim[3];
+        }
+        this.state = 9;
     };
 
     entity.move = function() {
+        if(this.frame == 7) {
+            this.alive = false;
+        }
+        /*
         for(var i = 0; i < entities.length; ++i) {
             if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
                 if(entities[i].type == T_CRATE) {
@@ -1111,6 +1133,7 @@ function build_person(x_t, y_t, tp, img, tile, key) {
                 }
             }
         }
+        */
     };
 
     return entity;
@@ -1476,13 +1499,17 @@ function draw_particles() {
 //  MAP
 
 function load_map(level) {
+    saved_people = 0;
+    total_people = 0;
+    current_boss = null;
+    timer = 0;
     if(level > 4) {
         game_state = GAME_OVER;
         current_level = 1;
     }
     var request = new XMLHttpRequest();
     //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    var url = 'http://badbattery/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
@@ -1600,7 +1627,7 @@ function ImageManager() {
         map_img.src = directory + 'Infiltrator.png';
         bullet_img.src = directory + 'bullet.png';
         enemy_img.src = directory + 'enemy_1b.png';
-        people_img.src = directory + 'people.png';
+        people_img.src = directory + 'person_1.png';
         enemy_2_img.src = directory + 'enemy_2.png';
         brain_1_img.src = directory + 'brain_1.png';
         parallax_img.src = directory + 'parallax.png';
