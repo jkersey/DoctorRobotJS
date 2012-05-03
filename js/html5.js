@@ -1,5 +1,11 @@
 var god_mode = false;
 
+var mouseX = 0;
+var mouseY = 0;
+var mouseDown = false;
+var mouseUp = false;
+
+
 var game_state;
 var INITIALIZE = 0;
 var RUNNING = 2;
@@ -9,12 +15,18 @@ var timer = 0;
 
 game_state = INITIALIZE;
 var map_name = "";
+var static_time = '';
 
 // interstitial IDs
 var GET_READY = 999999;
 var GAME_OVER = 999998;
 var CREDITS =   999997;
 var LEVEL_END = 999996;
+var PAUSED =    999995;
+var RESET_LEVEL = 999994;
+var CHAPTERS =  999993;
+var LEVELS =    999992;
+var HELP =      999991;
 
 var interstitialId = 0;
 
@@ -106,10 +118,16 @@ var OPEN = 1;
 var CLOSED = 0;
 
 var splashScreen;
+var pauseScreen;
+var helpScreen;
+var creditsScreen;
+var showChaptersScreen;
+var showLevelsScreen;
 var interstitial;
 var level_end;
 var gameover;
 var key_pressed;
+var keyIsDown = false;
 
 var teleporter_anim = new Array();
 teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
@@ -200,6 +218,7 @@ jumper_anim[ACTIVATED] = [0, 1, 3, 5, 0];
 var splash_screen_img = new Image();
 var alert_jetpack_img = new Image();
 var game_over_img = new Image();
+var chapters_img = new Image();
 var hud_img = new Image();
 var font_img = new Image();
 var tile_img = new Image();
@@ -265,17 +284,29 @@ function initialize_data() {
 }
 
 function game_loop() {
-    get_input();
-    move_stuff();
 
-    if(game_state == INITIALIZE) {
+    get_input();
+
+    if(game_state == CREDITS) {
+        showCreditsScreen();
+    } else if (game_state == RESET_LEVEL) {
+        resetLevel();
+    } else if (game_state == HELP) {
+        showHelpScreen();
+    } else if (game_state == CHAPTERS) {
+        showChaptersScreen();
+    } else if (game_state == LEVELS) {
+        showLevelsScreen();
+    } else if(game_state == INITIALIZE) {
         showSplashScreen();
     } else if(game_state == INTERSTITIAL) {
         showInterstitial();
     } else if(game_state == LEVEL_END) {
         showLevelEnd();
+    } else if(game_state == PAUSED) {
+        showPauseScreen();
     } else if(game_state == RUNNING) {
-
+        move_stuff();
         if(player.x + window_x < 200) {
             window_x += 3;
         }
@@ -307,7 +338,22 @@ function game_loop() {
     } else if(game_state == GAME_OVER) {
         showGameOver();
     }
+    mouseUp = false;
 
+    // pretend the space bar isn't down
+    // so that if you hit the space bar at the end of a level
+    // the game isn't immediately paused
+    keys[32] = false;  
+}
+
+function showCreditsScreen() {
+
+    if(creditsScreen == null) {
+        creditsScreen = new CreditsScreen();
+        creditsScreen.load_image();
+    }
+    creditsScreen.update();
+    creditsScreen.draw();
 }
 
 function showSplashScreen() {
@@ -319,6 +365,45 @@ function showSplashScreen() {
     }
     splashScreen.update();
     splashScreen.draw();
+}
+function showHelpScreen() {
+
+    if(helpScreen == null) {
+        helpScreen = new HelpScreen();
+        helpScreen.load_image();
+    }
+    helpScreen.update();
+    helpScreen.draw();
+}
+
+function showChaptersScreen() {
+
+    if(chaptersScreen == null) {
+        chaptersScreen = new ChaptersScreen();
+        chaptersScreen.load_image();
+    }
+    chaptersScreen.update();
+    chaptersScreen.draw();
+}
+
+function showLevelsScreen() {
+
+    if(levelsScreen == null) {
+        levelsScreen = new levelsScreen();
+        levelsScreen.load_image();
+    }
+    levelsScreen.update();
+    levelsScreen.draw();
+}
+
+function showPauseScreen() {
+
+    if(pauseScreen == null) {
+        pauseScreen = new PauseScreen();
+        pauseScreen.load_image();
+    }
+    pauseScreen.update();
+    pauseScreen.draw();
 }
 
 function showInterstitial() {
@@ -351,11 +436,12 @@ function showGameOver() {
     gameover.draw();
 }
 
-
 function draw_parallax() {
-    ctx.drawImage(parallax_img, 0, 0, 512, 512, window_x >> 4 - 5, window_y >> 4, 512, 512);
+    ctx.drawImage(parallax_img, 0, 0, 
+                  512, 512, 
+                  window_x >> 4 - 5, window_y >> 4, 
+                  512, 512);
 }
-
 
 function move_stuff() {
     player.move();
@@ -366,9 +452,64 @@ function move_stuff() {
     move_enemy_bullets();
 }
 
+function aKeyIsDown() {
+    if(keyIsDown) {
+        console.log(keys[0]);
+        keyIsDown = false;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function mouseIsDown() {
+    if(mouseUp) {
+        mouseUp = false;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+window.onmousedown = function() {
+    console.log("mouse down");
+    mouseDown = true;
+}
+
+
+window.onmouseup = function() {
+    console.log("mouse up");
+    if(mouseDown === true) {
+        mouseUp = true;
+        mouseDown = false;
+    }
+}
+
+function mouseMove(e) {
+
+    obj = canvas;
+    var top = 0;
+    var left = 0;
+    while (obj && obj.tagName != 'BODY') {
+        top += obj.offsetTop;
+        left += obj.offsetLeft;
+        obj = obj.offsetParent;
+    }
+ 
+    // return relative mouse position
+    var posx = e.clientX - left + window.pageXOffset;
+    var posy = e.clientY - top + window.pageYOffset;
+
+    mouseX = posx;
+    mouseY = posy;
+}
+
+
 window.onload = init;
+window.addEventListener('mousemove', mouseMove, true);
 window.addEventListener('keydown',keyDown,true);
 window.addEventListener('keyup',keyUp,true);
+
 function keyDown(evt){ keys[evt.keyCode] = true; }
 function keyUp(evt){ keys[evt.keyCode] = false; }
 
@@ -406,9 +547,18 @@ function draw_timer() {
     var mm = ((seconds / 60) + "").split('.')[0];
     var ss = ((seconds % 60) + "").split('.')[0];
     timer++;
-    draw_text(mm + ":" + ss, 300, 3);
+    if(ss < 10) { tens = 0; } else { tens = ''; }
+
+    static_time = mm + ":" + tens + ss;
+
+    draw_text(static_time, 300, 3);
 }
 
+
+function resetLevel() {
+    reset_level = true;
+    game_state = RUNNING;
+}
 
 
 //////////////////////////////////////////////////////////////////
@@ -416,7 +566,15 @@ function draw_timer() {
 
 function get_input() {
 
-    key_pressed = keys.length > 0;
+    key_pressed = false;
+
+    for(var i = 0; i < keys.length; ++i) {
+        if(keys[i] !== false && keys[i] !== undefined) {
+            key_pressed = true;
+            break;
+        }
+    }
+
 
     if (88 in keys && keys[88] && player.alive) {
             dude_fire();
@@ -432,9 +590,13 @@ function get_input() {
         player.down = false;
         //crouching = false;
     }
+
+    if(((32 in keys && keys[32] ) || 
+       (27 in keys && keys[27])) 
+       && game_state === RUNNING) {
+        game_state = PAUSED;
+    }
 }
-
-
 
 //////////////////////////////////////////////////////////////////
 //  ENEMY
@@ -477,7 +639,9 @@ function Enemy(x_t, y_t, type, img) {
 function make_enemies() {
     for(var y = 0; y<map.length; y++) {
         for(var x = 0; x< map[0].length; x++) {
-            if(map[y][x] == T_ENEMY_1_START || map[y][x] == T_ENEMY_2_START || map[y][x] == T_BOSS_1_START) {
+            if(map[y][x] == T_ENEMY_1_START || 
+               map[y][x] == T_ENEMY_2_START || 
+               map[y][x] == T_BOSS_1_START) {
                 enemies.push(make_enemy(x, y, map[y][x]));
             }
         }
@@ -512,12 +676,14 @@ function move_enemies() {
             // check for crate intersections
             for(var k = 0; k < entities.length; ++k) {
                 if(entities[k].type == T_CRATE) {
-                    if(intersect(enemies[i].x, enemies[i].y, 32, 48, entities[k].x, entities[k].y, 32, 32)) {
+                    if(intersect(enemies[i].x, enemies[i].y, 32, 48, 
+                                 entities[k].x, entities[k].y, 32, 32)) {
                         if(enemies[i].x < entities[k].x) {
                             enemies[i].x -=4;
                         } else {
                             enemies[i].x += 4;
-                            if(pixel_to_tile(enemies[i].x, enemies[i].y) > 0 || pixel_to_tile(enemies[i].x + 32, enemies[i].y) > 0) {
+                            if(pixel_to_tile(enemies[i].x, enemies[i].y) > 0 ||
+                               pixel_to_tile(enemies[i].x + 32, enemies[i].y) > 0) {
                                 if(enemies[i].x < entities[k].x) {
                                     enemies[i].x +=4;
                                     entities[k].x += 4;
@@ -612,13 +778,16 @@ function move_enemy_bullets() {
             enemy_bullets[i].x += 4 * enemy_bullets[i].direction;
 
             if (intersectedTile(enemy_bullets[i])) {
-                enemy_bullets[i]['x'] -= bullet_speed * enemy_bullets[i]['direction']; // back the bullet up
+                // back the bullet up
+                enemy_bullets[i]['x'] -= bullet_speed * enemy_bullets[i]['direction'];
                 enemy_bullets[i].alive = false;
 				fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
             } else {
-                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, player.x + 10, robot_y_top, 12, 30)) {
+                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, 
+                             player.x + 10, robot_y_top, 12, 30)) {
                     enemy_bullets[i].alive = false;
-                    fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
+                    fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 
+                                   2, 'red');
                     fire_particles(player.x + 16, player.y + 16, 4,'grey');
                     if(!god_mode) {
                         reset_level = true;
@@ -631,7 +800,9 @@ function move_enemy_bullets() {
                         if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
                             entities[k].x, entities[k].y, 32, 32)) {
                             enemy_bullets[i].alive = false;
-                            fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
+                            fire_particles(enemy_bullets[i]['x'], 
+                                           enemy_bullets[i]['y'], 
+                                           2, 'red');
                         }
                     }
                 }
@@ -681,21 +852,74 @@ function draw_enemies() {
 }
 
 
+   
+
 //////////////////////////////////////////////////////////////////
 //  SPLASH_SCREEN
 
 function SplashScreen() {
 
+    this.buttons = new Array();
+
+    var button_width = 300;
+    var button_height = 20;
+    var button_padding = 10;
+    var button_x = (canvas.width - button_width) / 2;
+    var button_y = 200;
+
+    interstitialId = GET_READY;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "START GAME", INTERSTITIAL));
+    button_y += button_height + button_padding;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "HOW TO PLAY", HELP));
+    button_y += button_height + button_padding;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "CREDITS", CREDITS));
+
+
     this.load_image = function() {
         image_manager.load_splash_screen_img();
         console.log("loaded the splash screen image");
+
     };
 
     this.update = function() {
-        if(key_pressed) {
-            interstitialId = GET_READY;
-            game_state = INTERSTITIAL;
+     };
+
+    this.draw = function() {
+        ctx.drawImage(splash_screen_img, 0, 0);
+        for(var i = 0; i < this.buttons.length; ++i) {
+            this.buttons[i].draw();
         }
+    };
+
+}
+ //////////////////////////////////////////////////////////////////
+//  LEVEL END
+
+function HelpScreen() {
+
+    var wait = 0;
+
+    this.load_image = function() {
+        image_manager.load_splash_screen_img();
+    };
+
+    this.update = function() {
+        if(wait > 60) {
+            if(key_pressed) {
+                game_state = INITIALIZE;
+                wait = 0;
+            }
+        }
+        wait++;
      };
 
     this.draw = function() {
@@ -703,9 +927,69 @@ function SplashScreen() {
         draw_text("Z:          FIRE",80, 220);
         draw_text("X:          JUMP/JETPACK",80, 234);
         draw_text("DOWN ARROW: CROUCH", 80, 248);
+        draw_text("DO NOT GET SHOT", 80, 262);
     };
 
 }
+
+//////////////////////////////////////////////////////////////////
+//  PAUSED
+
+function PauseScreen() {
+
+    this.buttons = new Array();
+
+    var button_width = 300;
+    var button_height = 20;
+    var button_padding = 10;
+    var button_x = (canvas.width - button_width) / 2;
+    var button_y = 200;
+
+    var wait;
+
+    interstitialId = GET_READY;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "RESUME GAME", RUNNING));
+
+   button_y += button_height + button_padding;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "RESTART LEVEL", RESET_LEVEL));
+
+   button_y += button_height + button_padding;
+
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "RESTART GAME", INITIALIZE));
+
+    this.activeButton = this.buttons[0];
+
+    this.load_image = function() {
+        image_manager.load_splash_screen_img();
+    };
+
+    this.update = function() {
+        if(key_pressed) {
+            if(wait > 60) {
+                this.activeButton.activate();
+                wait = 0;
+            }
+        }
+        wait++;
+     };
+
+    this.draw = function() {
+        ctx.drawImage(splash_screen_img, 0, 0);
+        for(var i = 0; i < this.buttons.length; ++i) {
+            this.buttons[i].draw();
+        }
+    };
+
+}
+
 
 //////////////////////////////////////////////////////////////////
 //  INTERSTITIAL
@@ -750,21 +1034,52 @@ function LevelEnd() {
     };
 
     this.update = function() {
-        if(wait > 1000) {
-            console.log("over 1000");
+        if(wait > 60) {
             if(key_pressed) {
-                console.log("key pressed");
                 load_map(current_level);
                 game_state = RUNNING;
+                wait = 0;
             }
-            wait = 0;
         }
         wait++;
      };
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
-        draw_text("CONTAMINATED HUMANS SAVED: 0", 40, 248);
+        draw_text("CONTAMINATED HUMANS FOUND: 0", 40, 228);
+        draw_text("TOTAL TIME WASTED: " + static_time, 80, 260);
+    };
+}
+
+//////////////////////////////////////////////////////////////////
+//  CREDITS
+
+function CreditsScreen() {
+
+    var wait = 0;
+
+    this.load_image = function() {
+        image_manager.load_game_over_img();
+        console.log("loaded the splash screen image");
+    };
+
+    this.update = function() {
+        if(key_pressed || mouseUp) {
+            mouseUp = false;
+            if(wait > 60) {
+                game_state = INITIALIZE;
+                wait = 0;
+            }
+        }
+        wait++;
+     };
+
+    this.draw = function() {
+        ctx.drawImage(game_over_img, 0, 0);
+        draw_text("ART AND PROGRAMMING",20, 220);
+        draw_text("JAMES KERSEY",20, 234);
+        draw_text("MUSIC AND NOISE", 20, 260);
+        draw_text("SPIKE the PERCUSSIONIST", 20, 274);
     };
 
 }
@@ -779,7 +1094,6 @@ function GameOver() {
 
     this.load_image = function() {
         image_manager.load_game_over_img();
-        console.log("loaded the splash screen image");
     };
 
     this.update = function() {
@@ -801,6 +1115,37 @@ function GameOver() {
     };
 
 }
+
+//////////////////////////////////////////////////////////////////
+//  Chapters
+
+function ChaptersScreen() {
+
+    var wait = 0;
+
+    this.load_image = function() {
+        image_manager.load_chapters_img();
+    };
+
+    this.update = function() {n
+        if(wait > 500) {
+            if(key_pressed) {
+                game_state = INITIALIZE;
+                load_map(0);
+            }
+             wait = 0;
+        }
+        wait++;
+     };
+
+    this.draw = function() {
+        ctx.drawImage(chapters_img, 0, 0);
+        draw_text("CHAPTERS",20, 220);
+    };
+
+}
+
+
 
 //////////////////////////////////////////////////////////////////
 //  PLAYER
@@ -1605,7 +1950,7 @@ function ImageManager() {
     var directory = "/play/doctor-robot/images/";
 
     this.load_splash_screen_img = function() {
-        splash_screen_img.src = directory + 'splash_screen.png';
+        splash_screen_img.src = directory + 'splash_screen_2.png';
     };
 
     this.load_splash_screen_2_img = function() {
@@ -1615,6 +1960,11 @@ function ImageManager() {
     this.load_game_over_img = function() {
         game_over_img.src = directory + 'game_over.png';
     };
+
+    this.load_chapters_img = function() {
+        chapters_img.src = directory + 'chapters.png';
+    };
+    
 
     this.load_images = function() {
 
