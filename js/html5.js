@@ -304,12 +304,448 @@ function ImageManager()
 }
 
 var image_manager;
-//////////////////////////////////////////////////////////////////
-//  MAP
+
+function parse_map(map_data) {
+	"use strict";
+
+    var
+	cols,
+	x, y,
+	rows = map_data.split('\n');
+
+    map = [];
+    map_name = rows[0];
+    for(y = 1; y < rows.length; ++y) {
+        cols = rows[y].split(',');
+		if(cols[0] === '0') {
+			break;
+		}
+        map[y-1] = [];
+        for(x = 0; x < cols.length; ++x) {
+			if(cols[x] === '') {
+				break;
+			}
+            map[y-1][x] = cols[x] - 1;
+        }
+    }
+    map_loaded = true;
+}
+
+function vertical_intersect(y, yh, y2, y2h) {
+	"use strict";
+    return y + yh > y2 && y < y2 + y2h;
+
+}
+
+function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
+	"use strict";
+    return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
+}
+
+function contains(sx, sy, sw, sh, tx, ty, tw, th) {
+	"use strict";
+    return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
+}
+
+function fire_particles(x, y, size, col) {
+	"use strict";
+
+	var 
+	i,
+	num_particles = 10;
+
+	for(i = 0; i < max_particles; ++i) {
+		if(!particles[i].alive) {
+			particles[i].alive = true;
+			particles[i].x = x;
+            particles[i].y = y;
+			particles[i].age = 0;
+            particles[i].size = size;
+            particles[i].col = col;
+			num_particles--;
+			if(num_particles < 0) {
+				break;
+			}
+		}
+	}
+}
+
+
+function get_trigger(id){
+	"use strict";
+	var i;
+
+    for(i = 0; i < entities.length; ++i) {
+        if(entities[i].key === id - 16) {
+            return entities[i];
+        }
+    }
+    return 0;
+}
+
+function get_target(id) {
+	"use strict";
+	var i;
+    for(i = 0; i < entities.length; ++i) {
+        if(entities[i].key === id + 16) {
+            return entities[i];
+        }
+    }
+    return 0;
+}
+
+function map_iterate(func) {
+	"use strict";
+
+	var x, y;
+
+    for(y = 0; y<map.length; y++) {
+        for(x = 0; x< map[0].length; x++) {
+            func(x, y);
+        }
+    }
+}
+
+
+function make_bullets() {
+	"use strict";
+
+	var i;
+
+    for(i = 0; i < max_bullets; i++) {
+        bullets[i] = [];
+        bullets[i].alive = false;
+    }
+}
+
+function make_particles() {
+	"use strict";
+
+	var i;
+
+	for(i = 0; i < max_particles; i++) {
+		particles[i] = [];
+		particles[i].alive = false;
+		particles[i].x_vel = Math.floor(Math.random()*10 - 5);
+		particles[i].y_vel = Math.floor(Math.random()*10 - 5);
+		particles[i].age = 0;
+	}
+}
+function Entity(x_t, y_t, tp, img, tile, key) {
+	"use strict";
+
+    this.x_tile = x_t;
+    this.y_tile = y_t;
+    this.y_inertia = 0;
+    this.type = tp;
+    this.key = key;
+    this.x = this.x_tile * TILE_WIDTH;
+    this.y = this.y_tile * TILE_WIDTH;
+    this.image = img;
+    this.current_anim = door_anim[ACTIVATED];
+    this.frame = current_anim.length - 1;
+    this.state = ACTIVATED;
+    this.is_teleportable = false;
+    this.is_being_pushed = false;
+    this.wait_index = 0;
+    this.alive = true;
+    this.loop_animation = false;
+    map[this.y_tile][this.x_tile] = tile;
+
+    this.draw = function() {
+        this.wait_index++;
+        if(this.alive) {
+            if(this.wait_index > frameRate) {
+                this.wait_index = 0;
+                this.frame++;
+            }
+            if(this.frame >= this.current_anim.length) {
+                if(this.loop_animation) {
+                    this.frame = 0;
+                } else {
+                    this.frame = this.current_anim.length - 1;
+                }
+            }
+            if(this && this.image) {
+                if(this.type === 13) {
+                    ctx.drawImage(this.image,
+								  this.current_anim[this.frame] * 32, 32, 32, 32,
+								  this.x + window_x,this.y + window_y, 32, 32);
+                } else {
+                    ctx.drawImage(this.image,
+								  this.current_anim[this.frame] * 32, 0, 32, 32,
+								  this.x + window_x,this.y + window_y, 32, 32);
+                }
+            }
+        }
+
+    };
+
+    this.move = function() {
+        // override this
+    };
+    this.check_player = function() {
+        // override this
+    };
+
+}
+
+
+function build_switch(x_t, y_t, tp, img, tile, key) {
+	"use strict";
+
+    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+
+    entity.move = function() {
+        if(contains(player.x, player.y + 18, 32, 30, this.x, this.y, 32, 32)) {
+            if(!this.is_being_pushed && this.state === ACTIVATED) {
+                this.state = DEACTIVATED;
+                this.current_anim = entity_anim[DEACTIVATED];
+                this.wait_index = 0;
+                this.frame = 0;
+                this.is_being_pushed = true;
+            } if (!this.is_being_pushed && this.state === DEACTIVATED) {
+                this.state = ACTIVATED;
+                this.wait_index = 0;
+                this.current_anim = entity_anim[ACTIVATED];
+                this.frame = 0;
+                this.is_being_pushed = true;
+            }
+        }
+        if(!intersect(player.x + 14, player.y + 18, 4, 30, this.x, this.y, 32, 32) && this.is_being_pushed) {
+            this.is_being_pushed = false;
+        }
+
+    };
+    return entity;
+}
+
+function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
+	"use strict";
+
+    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    entity.parent_type = parent_type;
+    entity.state = OPEN;
+    entity.current_anim = teleporter_anim[OPEN];
+    entity.loop_animation = true;
+
+    entity.get_trigger = function() {
+        if(!this.trigger) {
+            if(this.parent_type === DOOR) {
+                this.trigger = get_trigger(key);
+            } else {
+                this.trigger = get_target(key);
+            }
+        }
+        return this.trigger;
+    };
+
+    entity.move = function() {
+        var 
+		i,
+		y_modified,
+		stay_closed,
+		trigger = this.get_trigger();
+
+        if(this.state === OPEN && trigger.state === OPEN) {
+            if(contains(player.x, player.y + 18, 32, 32, this.x, this.y, 32, 32)) {
+                if(map[trigger.y_tile - 1][trigger.x_tile] > 1) {
+                    y_modified = trigger.y;
+                } else {
+                    y_modified = trigger.y - 20;
+                }
+                player.teleport(trigger.x, y_modified);
+                trigger.state = CLOSED;
+                this.state = CLOSED;
+                this.current_anim = teleporter_anim[CLOSED];
+                trigger.current_anim = teleporter_anim[CLOSED];
+                return;
+            }
+            for(i = 0; i < entities.length; ++i) {
+                if(entities[i].is_teleportable) {
+                    if(contains(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
+                        entities[i].x = trigger.x;
+                        entities[i].y = trigger.y;
+                        this.state = CLOSED;
+                        trigger.state = CLOSED;
+                        this.current_anim = teleporter_anim[CLOSED];
+                        trigger.current_anim = teleporter_anim[CLOSED];
+                        return;
+                    }
+                }
+            }
+        }
+        if(this.state === CLOSED) {
+            stay_closed = false;
+            if(intersect(player.x, player.y, 32, 32, this.x, this.y, 32, 32)) {
+                stay_closed = true;
+            }
+            if(!stay_closed) {
+                for(i = 0; i < entities.length; ++i) {
+                    if(entities[i].is_teleportable && intersect(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
+                        stay_closed = true;
+                        break;
+                    }
+                }
+            }
+            if(!stay_closed) {
+                this.state = OPEN;
+                this.current_anim = teleporter_anim[OPEN];
+            }
+        }
+    };
+
+    entity.check_player = function() {
+    };
+    return entity;
+}
+
+function build_door(x_t, y_t, tp, img, tile, key) {
+	"use strict";
+
+    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+
+    entity.move = function() {
+        var 
+		j,
+		trigger = get_trigger(this.key);
+
+        if(trigger.state === DEACTIVATED && this.state !== DEACTIVATED) {
+            this.state = DEACTIVATED;
+            this.current_anim = door_anim[DEACTIVATED];
+            this.frame = 0;
+            map[this.y_tile][this.x_tile] = T_EMPTY;
+        } else if(trigger.state === ACTIVATED && this.state !== ACTIVATED) {
+            this.state = ACTIVATED;
+            map[this.y_tile][this.x_tile] = EMPTY_BLOCKING;
+            this.current_anim = door_anim[ACTIVATED];
+            this.frame = 0;
+            for(j = 0; j < enemies.length; ++j) {
+                if(enemies[j].alive) {
+                    if(this && intersect(this.x, this.y, 32, 32,
+										 enemies[j].x + 10, enemies[j].y, 12, 48)) {
+                        trigger.state = DEACTIVATED;
+                        enemies[j].alive = false;
+                        fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
+                    }
+                }
+            }
+        }
+    };
+
+    return entity;
+
+}
+
+
+function make_entity(x, y, type, parent_type) {
+	"use strict";
+
+    // Switches
+    if(map[y][x-1] === E_SWITCH) {
+        return build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
+    } else if (map[y][x+1] === E_SWITCH) {
+        return build_switch(x, y, SWITCH, images.switch_2, T_EMPTY, type);
+
+		// Teleporter
+    } else if(map[y+1][x] === E_TELEPORTER) {
+        return build_teleporter(x, y, TELEPORTER, images.teleport_1, T_EMPTY, type, parent_type);
+    } else if(map[y-1][x] === E_TELEPORTER) {
+        return build_teleporter(x, y, TELEPORTER, images.teleport_2, T_EMPTY, type, parent_type);
+
+		// Doors
+    } else if(map[y-1][x] === E_DOOR) {
+        return build_door(x, y, DOOR, images.door_1, EMPTY_BLOCKING, type);
+    } else if(map[y+1][x] === E_DOOR) {
+        return build_door(x, y, DOOR, images.door_2, EMPTY_BLOCKING, type);
+    } else if(map[y][x-1] === E_DOOR) {
+        return build_door(x, y, DOOR, images.door_3, EMPTY_BLOCKING, type);
+    } else if(map[y][x+1] === E_DOOR) {
+        return build_door(x, y, DOOR, images.door_4, EMPTY_BLOCKING, type);
+
+		// Jetpack
+    } else if(type === T_JETPACK) {
+        return build_jetpack(x, y, type, images.jetpack_icon, T_EMPTY);
+
+		// Crate
+    } else if(type === T_CRATE) {
+        return build_crate(x, y, type, images.crate_1, T_EMPTY);
+
+    } else if(type === T_PERSON) {
+        console.log("building a person");
+        return build_person(x, y, type, people_img, T_EMPTY);
+
+		// Exit
+    } else if (type === T_EXIT) {
+        return build_exit(x, y, type, null, T_EMPTY);
+
+		// Fluid
+    } else if (type === T_FLUID || type == 13) {
+        return build_fluid(x, y, type, images.fluid_1, T_EMPTY);
+
+		// Jumper
+    } else if (type === T_JUMPER) {
+        return build_jumper(x, y, type, images.jumper, T_EMPTY);
+
+		// Unknown
+    } else {
+        return new Entity(x, y, type, images.door_2, T_EMPTY);
+    }
+}
+
+function make_entities() {
+	"use strict";
+
+    // make doors, switches and trampolines.
+    // have to make switches before doors
+    map_iterate(function(x, y) {
+        if(map[y][x] > 15 && map[y][x] < 32) {
+            entities.push(make_entity(x, y, map[y][x], SWITCH));
+        }
+    });
+    map_iterate(function(x, y) {
+        if(map[y][x] > 31 && map[y][x] < 48) {
+            entities.push(make_entity(x, y, map[y][x], DOOR));
+        }
+    });
+    map_iterate(function(x, y) {
+        if(map[y][x] > 7 && map[y][x] < 16) {
+            entities.push(make_entity(x, y, map[y][x], map[y][x]));
+        }
+    });
+}
+
+
+function initialize_data() {
+	"use strict";
+
+    image_manager.load_images();
+
+    enemies = [];
+    entities = [];
+    enemy_bullets = [];
+    bullets = [];
+    particles = [];
+    make_bullets();
+	make_particles();
+    make_entities();
+    make_enemies();
+    make_enemy_bullets();
+    player = build_player();
+    player.initialize();
+    player.alive = true;
+    window_x = 200 - player.x;
+    window_y = 100 - player.y;
+
+    if(!animating) {
+        animate();
+        animating = true;
+    }
+}
 
 function load_map(level) {
 	"use strict";
-	var 
+	var	
 	url,
 	request;
 
@@ -325,7 +761,7 @@ function load_map(level) {
     url = '//' + loc + '/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     request.open('GET', url);
     request.onreadystatechange = function() {
-        if (request.readyState != 4 || request.status != 200) {
+        if (request.readyState !== 4 || request.status !== 200) {
 			return;
         }
         parse_map(request.responseText);
@@ -334,28 +770,6 @@ function load_map(level) {
     request.send(null);
 }
 
-function parse_map(map_data) {
-	"use strict";
-
-    var rows = map_data.split('\n');
-    map = new Array();
-    map_name = rows[0];
-    console.log(current_level + ":" + map_name);
-    for(var y = 1; y < rows.length; ++y) {
-        var cols = rows[y].split(',');
-		if(cols[0] === '0') {
-			break;
-		}
-        map[y-1] = new Array();
-        for(var x = 0; x < cols.length; ++x) {
-			if(cols[x] === '') {
-				break;
-			}
-            map[y-1][x] = cols[x] - 1;
-        }
-    }
-    map_loaded = true;
-}
 
 function draw_map() {
 	"use strict";
@@ -384,31 +798,6 @@ function init() {
     load_map("1");
 }
 
-function initialize_data() {
-
-    image_manager.load_images();
-
-    enemies = [];
-    entities = [];
-    enemy_bullets = new Array(max_enemy_bullets);
-    bullets = new Array(max_bullets);
-    particles = new Array(max_particles);
-    make_bullets();
-	make_particles();
-    make_entities();
-    make_enemies();
-    make_enemy_bullets();
-    player = build_player();
-    player.initialize();
-    player.alive = true;
-    window_x = 200 - player.x;
-    window_y = 100 - player.y;
-
-    if(!animating) {
-        animate();
-        animating = true;
-    }
-}
 
 
 function showCreditsScreen() {
@@ -1349,12 +1738,6 @@ function build_player() {
 }
 
 
-function make_bullets() {
-    for(var i = 0; i < max_bullets; i++) {
-        bullets[i] = [];
-        bullets[i]['alive'] = false;
-    }
-}
 function move_bullets() {
     bullet_timer++;
     for(var i = 0; i < max_bullets; ++i) {
@@ -1589,70 +1972,10 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
 //////////////////////////////////////////////////////////////////
 //  SWITCH
 
-function build_switch(x_t, y_t, tp, img, tile, key) {
-
-    entity = new Entity(x_t, y_t, tp, img, tile, key);
-
-    entity.move = function() {
-        if(contains(player.x, player.y + 18, 32, 30, this.x, this.y, 32, 32)) {
-            if(!this.is_being_pushed && this.state == ACTIVATED) {
-                this.state = DEACTIVATED;
-                this.current_anim = entity_anim[DEACTIVATED];
-                this.wait_index = 0;
-                this.frame = 0;
-                this.is_being_pushed = true;
-            } if (!this.is_being_pushed && this.state == DEACTIVATED) {
-                this.state = ACTIVATED;
-                this.wait_index = 0;
-                this.current_anim = entity_anim[ACTIVATED];
-                this.frame = 0;
-                this.is_being_pushed = true;
-            }
-        }
-        if(!intersect(player.x + 14, player.y + 18, 4, 30, this.x, this.y, 32, 32) && this.is_being_pushed) {
-            this.is_being_pushed = false;
-        }
-
-    };
-    return entity;
-}
 
 //////////////////////////////////////////////////////////////////
 //  DOOR
 
-function build_door(x_t, y_t, tp, img, tile, key) {
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
-
-    entity.move = function() {
-        var trigger = get_trigger(this.key);
-        if(trigger.state == DEACTIVATED && !this.state == DEACTIVATED) {
-            console.log("opening door");
-            this.state = DEACTIVATED;
-            this.current_anim = door_anim[DEACTIVATED];
-            this.frame = 0;
-            map[this.y_tile][this.x_tile] = T_EMPTY;
-        } else if(trigger.state == ACTIVATED && !this.state == ACTIVATED) {
-            console.log("opening door");
-            this.state = ACTIVATED;
-            map[this.y_tile][this.x_tile] = EMPTY_BLOCKING;
-            this.current_anim = door_anim[ACTIVATED];
-            this.frame = 0;
-            for(var j = 0; j < enemies.length; ++j) {
-                if(enemies[j].alive) {
-                    if(this && intersect(this.x, this.y, 32, 32,
-										 enemies[j].x + 10, enemies[j].y, 12, 48)) {
-                        trigger.state = DEACTIVATED;
-                        enemies[j].alive = false;
-                        fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
-                    }
-                }
-            }
-        }
-    };
-
-    return entity;
-
-}
 
 
 //////////////////////////////////////////////////////////////////
@@ -1720,109 +2043,9 @@ function build_jetpack(x_t, y_t, tp, img, tile, key) {
 //////////////////////////////////////////////////////////////////
 //  TELEPORTER
 
-function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
-    entity.parent_type = parent_type;
-    entity.state = OPEN;
-    entity.current_anim = teleporter_anim[OPEN];
-    entity.loop_animation = true;
-
-    entity.get_trigger = function() {
-        if(!this.trigger) {
-            if(this.parent_type == DOOR) {
-                this.trigger = get_trigger(key);
-            } else {
-                this.trigger = get_target(key);
-            }
-        }
-        return this.trigger;
-    };
-
-    entity.move = function() {
-        var trigger = this.get_trigger();
-        if(this.state == OPEN && trigger.state == OPEN) {
-            if(contains(player.x, player.y + 18, 32, 32, this.x, this.y, 32, 32)) {
-                if(map[trigger.y_tile - 1][trigger.x_tile] > 1) {
-                    y_modified = trigger.y;
-                } else {
-                    y_modified = trigger.y - 20;
-                }
-                player.teleport(trigger.x, y_modified);
-                trigger.state = CLOSED;
-                this.state = CLOSED;
-                this.current_anim = teleporter_anim[CLOSED];
-                trigger.current_anim = teleporter_anim[CLOSED];
-                return;
-            }
-            for(var i = 0; i < entities.length; ++i) {
-                if(entities[i].is_teleportable) {
-                    if(contains(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
-                        entities[i].x = trigger.x;
-                        entities[i].y = trigger.y;
-                        this.state = CLOSED;
-                        trigger.state = CLOSED;
-                        this.current_anim = teleporter_anim[CLOSED];
-                        trigger.current_anim = teleporter_anim[CLOSED];
-                        return;
-                    }
-                }
-            }
-        }
-        if(this.state == CLOSED) {
-            var stay_closed = false;
-            if(intersect(player.x, player.y, 32, 32, this.x, this.y, 32, 32)) {
-                stay_closed = true;
-            }
-            if(!stay_closed) {
-                for(var i = 0; i < entities.length; ++i) {
-                    if(entities[i].is_teleportable && intersect(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
-                        stay_closed = true;
-                        break;
-                    }
-                }
-            }
-            if(!stay_closed) {
-                this.state = OPEN;
-                this.current_anim = teleporter_anim[OPEN];
-            }
-        }
-    };
-
-    entity.check_player = function() {
-    };
-    return entity;
-}
-
 //////////////////////////////////////////////////////////////////
 //  PARTICLES
 
-function fire_particles(x, y, size, col) {
-	var num_particles = 10;
-	for(var i = 0; i < max_particles; ++i) {
-		if(!particles[i]['alive']) {
-			particles[i]['alive'] = true;
-			particles[i]['x'] = x;
-            particles[i]['y'] = y;
-			particles[i]['age'] = 0;
-            particles[i]['size'] = size;
-            particles[i]['col'] = col;
-			num_particles--;
-			if(num_particles < 0) {
-				break;
-			}
-		}
-	}
-}
-
-function make_particles() {
-	for(var i = 0; i < max_particles; i++) {
-		particles[i] = [];
-		particles[i]['alive'] = false;
-		particles[i]['x_vel'] = Math.floor(Math.random()*10 - 5);
-		particles[i]['y_vel'] = Math.floor(Math.random()*10 - 5);
-		particles[i]['age'] = 0;
-	}
-}
 
 function move_particles() {
     for(var i = 0; i < max_particles; ++i) {
@@ -1887,13 +2110,6 @@ function true_pixel_to_tile(x, y) {
     return map[y_tile][x_tile];
 }
 
-function map_iterate(func) {
-    for(y = 0; y<map.length; y++) {
-        for(x = 0; x< map[0].length; x++) {
-            func(x, y);
-        }
-    }
-}
 
 function resetting_level() {
     reset_timer++;
@@ -1933,18 +2149,6 @@ function draw_text(str, x, y) {
     }
 }
 
-function vertical_intersect(y, yh, y2, y2h) {
-    return y + yh > y2 && y < y2 + y2h;
-
-}
-
-function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
-    return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
-}
-
-function contains(sx, sy, sw, sh, tx, ty, tw, th) {
-    return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
-}
 
 function drawRectangle(x, y, w, h, fill) {
 	ctx.beginPath();
@@ -1959,23 +2163,6 @@ function animate() {
     game_loop();
 }
 
-function get_trigger(id){
-    for(var i = 0; i < entities.length; ++i) {
-        if(entities[i].key == id - 16) {
-            return entities[i];
-        }
-    }
-    return 0;
-}
-
-function get_target(id) {
-    for(var i = 0; i < entities.length; ++i) {
-        if(entities[i].key == id + 16) {
-            return entities[i];
-        }
-    }
-    return 0;
-}
 
 // shim layer with setTimeout fallback
 window.requestAnimFrame = (function(){
@@ -1994,139 +2181,9 @@ window.requestAnimFrame = (function(){
 //////////////////////////////////////////////////////////////////
 //  ENTITY
 
-function Entity(x_t, y_t, tp, img, tile, key) {
-
-    this.x_tile = x_t;
-    this.y_tile = y_t;
-    this.y_inertia = 0;
-    this.type = tp;
-    this.key = key;
-    this.x = this.x_tile * TILE_WIDTH;
-    this.y = this.y_tile * TILE_WIDTH;
-    this.image = img;
-    this.current_anim = door_anim[ACTIVATED];
-    this.frame = current_anim.length - 1;
-    this.state = ACTIVATED;
-    this.is_teleportable = false;
-    this.is_being_pushed = false;
-    this.wait_index = 0;
-    this.alive = true;
-    this.loop_animation = false;
-    map[this.y_tile][this.x_tile] = tile;
-
-    this.draw = function() {
-        this.wait_index++;
-        if(this.alive) {
-            if(this.wait_index > frameRate) {
-                this.wait_index = 0;
-                this.frame++;
-            }
-            if(this.frame >= this.current_anim.length) {
-                if(this.loop_animation) {
-                    this.frame = 0;
-                } else {
-                    this.frame = this.current_anim.length - 1;
-                }
-            }
-            if(this && this.image) {
-                if(this.type == 13) {
-                    ctx.drawImage(this.image,
-								  this.current_anim[this.frame] * 32, 32, 32, 32,
-								  this.x + window_x,this.y + window_y, 32, 32);
-                } else {
-                    ctx.drawImage(this.image,
-								  this.current_anim[this.frame] * 32, 0, 32, 32,
-								  this.x + window_x,this.y + window_y, 32, 32);
-                }
-            }
-        }
-
-    };
-
-    this.move = function() {
-        // override this
-    };
-    this.check_player = function() {
-        // override this
-    };
-
-}
 
 
 
-function make_entities() {
-    // make doors, switches and trampolines.
-    // have to make switches before doors
-    map_iterate(function(x, y) {
-        if(map[y][x] > 15 && map[y][x] < 32) {
-            entities.push(make_entity(x, y, map[y][x], SWITCH));
-        }
-    });
-    map_iterate(function(x, y) {
-        if(map[y][x] > 31 && map[y][x] < 48) {
-            entities.push(make_entity(x, y, map[y][x], DOOR));
-        }
-    });
-    map_iterate(function(x, y) {
-        if(map[y][x] > 7 && map[y][x] < 16) {
-            entities.push(make_entity(x, y, map[y][x], map[y][x]));
-        }
-    });
-}
-
-function make_entity(x, y, type, parent_type) {
-
-    // Switches
-    if(map[y][x-1] == E_SWITCH) {
-        return build_switch(x, y, SWITCH, images['switch_1'], T_EMPTY, type);
-    } else if (map[y][x+1] == E_SWITCH) {
-        return build_switch(x, y, SWITCH, images['switch_2'], T_EMPTY, type);
-
-		// Teleporter
-    } else if(map[y+1][x] == E_TELEPORTER) {
-        return build_teleporter(x, y, TELEPORTER, images['teleport_1'], T_EMPTY, type, parent_type);
-    } else if(map[y-1][x] == E_TELEPORTER) {
-        return build_teleporter(x, y, TELEPORTER, images['teleport_2'], T_EMPTY, type, parent_type);
-
-		// Doors
-    } else if(map[y-1][x] == E_DOOR) {
-        return build_door(x, y, DOOR, images['door_1'], EMPTY_BLOCKING, type);
-    } else if(map[y+1][x] == E_DOOR) {
-        return build_door(x, y, DOOR, images['door_2'], EMPTY_BLOCKING, type);
-    } else if(map[y][x-1] == E_DOOR) {
-        return build_door(x, y, DOOR, images['door_3'], EMPTY_BLOCKING, type);
-    } else if(map[y][x+1] == E_DOOR) {
-        return build_door(x, y, DOOR, images['door_4'], EMPTY_BLOCKING, type);
-
-		// Jetpack
-    } else if(type == T_JETPACK) {
-        return build_jetpack(x, y, type, images['jetpack_icon'], T_EMPTY);
-
-		// Crate
-    } else if(type == T_CRATE) {
-        return build_crate(x, y, type, images['crate_1'], T_EMPTY);
-
-    } else if(type == T_PERSON) {
-        console.log("building a person");
-        return build_person(x, y, type, people_img, T_EMPTY);
-
-		// Exit
-    } else if (type == T_EXIT) {
-        return build_exit(x, y, type, null, T_EMPTY);
-
-		// Fluid
-    } else if (type == T_FLUID || type == 13) {
-        return build_fluid(x, y, type, images['fluid_1'], T_EMPTY);
-
-		// Jumper
-    } else if (type == T_JUMPER) {
-        return build_jumper(x, y, type, images['jumper'], T_EMPTY);
-
-		// Unknown
-    } else {
-        return new Entity(x, y, type, images['door_2'], T_EMPTY);
-    }
-}
 
 function move_entities() {
     // make sure the entities are even on the screen
