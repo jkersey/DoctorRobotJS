@@ -1,7 +1,7 @@
 /*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false, onevar: false, undef: true, sloppy: true, stupid: true, vars: true */
 
 
-var god_mode = false;
+var god_mode = true;
 var images_loaded = 0;
 
 var mouseX = 0;
@@ -340,13 +340,19 @@ function parse_map(map_data) {
 	"use strict";
 
     var rows = map_data.split('\n');
-    map = new Array(rows.length - 1);
+    map = new Array();
     map_name = rows[0];
     console.log(current_level + ":" + map_name);
     for(var y = 1; y < rows.length; ++y) {
         var cols = rows[y].split(',');
-        map[y-1] = new Array(cols.length);
+		if(cols[0] === '0') {
+			break;
+		}
+        map[y-1] = new Array();
         for(var x = 0; x < cols.length; ++x) {
+			if(cols[x] === '') {
+				break;
+			}
             map[y-1][x] = cols[x] - 1;
         }
     }
@@ -2163,8 +2169,13 @@ function game_loop() {
     } else if(game_state === RUNNING) {
         move_stuff();
 		if(window_x > -3) { window_x = -3; }
+		if(window_x < canvas.width - (map[0].length * 32)) { 
+			window_x = canvas.width - (map[0].length * 32); 
+		}
 		if(window_y > 8) { window_y = 8; }
-
+		if(window_y < canvas.height - (map.length * 32 - 8)) {
+			window_y = canvas.height - (map.length * 32 - 8);
+		}
         if(player.x + window_x < 200) {
             window_x += 3;
         }
