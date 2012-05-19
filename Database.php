@@ -9,13 +9,13 @@
 
 class Database {
 
-    var $user = "root";
-    var $pass = "";
+	var $user = "root";
+    var $pass = "password";
     var $host = "127.0.0.1";
     var $name = "doctor_robot";
 
-    function getById($table, $id) {
-
+    function getById($table, $id) 
+    {
         $link = $this->connectToDatabase();
 
         $query = "SELECT * FROM " . $table . " where id=" . $id;

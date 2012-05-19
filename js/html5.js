@@ -1,4 +1,8 @@
+/*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false, onevar: false, undef: true, sloppy: true, stupid: true, vars: true */
+
+
 var god_mode = false;
+var images_loaded = 0;
 
 var mouseX = 0;
 var mouseY = 0;
@@ -60,9 +64,7 @@ var T_CRATE = 11;
 var T_FLUID = 12;
 var T_EXIT = 15;
 
-
 var EMPTY_BLOCKING = 255;
-
 
 var fluid_anim = [0, 1, 2, 3];
 
@@ -129,16 +131,16 @@ var gameover;
 var key_pressed;
 var keyIsDown = false;
 
-var teleporter_anim = new Array();
+var teleporter_anim = [];
 teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
 teleporter_anim[CLOSED] = [5, 5, 5];
 
 // enemies
-var enemies = new Array();
+var enemies = [];
 var enemy_bullet_timer = 4;
 var max_enemy_bullets = 100;
-var enemy_bullets = new Array(max_enemy_bullets);
-var enemy_anim = new Array();
+var enemy_bullets = [];
+var enemy_anim = [];
 enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
 enemy_anim[WALK_LEFT] = [0, 1, 2, 3];
 enemy_anim[STAND] = [6, 6, 6];
@@ -147,25 +149,25 @@ var BOSS_FULL = 0;
 var BOSS_HALF = 1;
 var BOSS_EMPTY = 2;
 
-var boss_anim = new Array();
+var boss_anim = [];
 boss_anim[BOSS_FULL] = [0, 1, 2, 3, 4];
 boss_anim[BOSS_HALF] = [5, 6, 7, 8, 9];
 boss_anim[BOSS_EMPTY] = [10, 11, 12, 13, 14];
 
-var person_anim = new Array();
+var person_anim = [];
 person_anim[0] = [0];
 person_anim[1] = [1];
 person_anim[3] = [2, 3, 4, 5, 6, 7, 8, 9];
 
 // particles
 var max_particles = 500;
-var particles = new Array(max_particles);
+var particles = [];
 
 
 // player
 var player;
 var robot_frame = 0;
-var anim = new Array();
+var anim = [];
 anim[WALK_RIGHT] = [0, 1, 2, 3, 4, 5];
 anim[WALK_LEFT] = [8, 7, 6, 11, 10, 9];
 anim[JET_RIGHT] = [15, 16, 17];
@@ -179,7 +181,7 @@ var current_anim = anim[WALK_RIGHT];
 // player bullets
 var bullet_timer = 4;
 var max_bullets = 10;
-var bullets = new Array(max_bullets);
+var bullets = [];
 var bullet_speed = 8;
 
 // environment
@@ -191,28 +193,29 @@ var animating = false;
 
 var inertiaX = 0;
 var inertiaY = 0;
-var gravity = .5;
+var gravity = 0.5;
 
 var waitIndex = 0;
 var frameRate = 6;
 
 var canvas = null;
 var ctx = null;
-var keys = new Array();
+var keys = [];
 
 // entities
-var entities = new Array();
-var entity_anim = new Array();
+var entities = [];
+var entity_anim = [];
 entity_anim[ACTIVATED] = [0, 1, 2];
 entity_anim[DEACTIVATED] = [3, 4, 5];
 
-var door_anim = new Array();
+var door_anim = [];
 door_anim[ACTIVATED] = [5, 4, 3, 2, 1, 0];
 door_anim[DEACTIVATED] = [0, 1, 2, 3, 4, 5];
 
-var jumper_anim = new Array();
+var jumper_anim = [];
 jumper_anim[ACTIVATED] = [0, 1, 3, 5, 0];
 
+var game_images = [];
 
 // images
 var splash_screen_img = new Image();
@@ -230,25 +233,145 @@ var brain_1_img = new Image();
 var map_img = new Image();
 var bullet_img = new Image();
 var parallax_img = new Image();
-var images = new Array();
-images['crate_1'] = new Image();
-images['switch_1'] = new Image();
-images['switch_2'] = new Image();
-images['door_1'] = new Image();
-images['door_2'] = new Image();
-images['door_3'] = new Image();
-images['door_4'] = new Image();
-images['fluid_1'] = new Image();
-images['jetpack_icon'] = new Image();
-images['teleport_1'] = new Image();
-images['teleport_2'] = new Image();
-images['jumper'] = new Image();
-images['fuel_overlay'] = new Image();
+var images = [];
+images.crate_1 = new Image();
+images.switch_1 = new Image();
+images.switch_2 = new Image();
+images.door_1 = new Image();
+images.door_2 = new Image();
+images.door_3 = new Image();
+images.door_4 = new Image();
+images.fluid_1 = new Image();
+images.jetpack_icon = new Image();
+images.teleport_1 = new Image();
+images.teleport_2 = new Image();
+images.jumper = new Image();
+images.fuel_overlay = new Image();
+
+
+function ImageManager() 
+{
+	"use strict";
+	var 
+	i,
+    directory = "/play/doctor-robot/images/";
+
+	this.load_image = function(img, name) {
+		img.src = directory + name;
+		img.onLoad = images_loaded++;
+	};
+
+    this.load_images = function() {
+
+		game_images = [
+			[alert_jetpack_img, 'jetpack.png'],
+			[font_img, 'small_font.gif'],
+			[tile_img, 'tiles.png'],
+			[hud_img,'hud.png'],
+			[dude_img,'dude_2.png'],
+			[map_img,'Infiltrator.png'],
+			[bullet_img,'bullet.png'],
+			[enemy_img,'enemy_1b.png'],
+			[people_img,'person_1.png'],
+			[enemy_2_img,'enemy_2.png'],
+			[brain_1_img,'brain_1.png'],
+			[parallax_img, 'parallax.png'],
+			[images.switch_1,'switch_1.png'],
+			[images.switch_2, 'switch_2.png'],
+			[images.teleport_1, 'teleport_1.png'],
+			[images.teleport_2, 'teleport_2.png'],
+			[images.crate_1, 'crate_1.png'],
+			[images.door_1, 'door_1.png'],
+			[images.door_2, 'door_2.png'],
+			[images.door_3, 'door_3.png'],
+			[images.door_4, 'door_4.png'],
+			[images.fluid_1, 'fluid_1.png'],
+			[images.jetpack_icon, 'jetpack_icon.png'],
+			[images.fuel_overlay, 'fuel_overlay.png'],
+			[images.jumper, 'jumper.png'],
+			[splash_screen_img, 'splash_screen_2.png'],
+			[splash_screen_img, 'splash_screen_2.png'],
+			[game_over_img, 'game_over.png'],
+			[chapters_img, 'chapters.png']
+		];
+		
+		for(i = 0; i < game_images.length; ++i) {
+			this.load_image(game_images[i][0], game_images[i][1]);
+		}
+
+    };
+
+}
 
 var image_manager;
+//////////////////////////////////////////////////////////////////
+//  MAP
 
+function load_map(level) {
+	"use strict";
+	var 
+	url,
+	request;
+
+    saved_people = 0;
+    total_people = 0;
+    current_boss = null;
+    timer = 0;
+    if(level > 4) {
+        game_state = GAME_OVER;
+        current_level = 1;
+    }
+    request = new XMLHttpRequest();
+    //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
+    url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    console.log(url);
+    request.open('GET', url);
+    request.onreadystatechange = function() {
+        if (request.readyState != 4 || request.status != 200) {
+			return;
+        }
+        parse_map(request.responseText);
+        initialize_data();
+    };
+    request.send(null);
+}
+
+function parse_map(map_data) {
+	"use strict";
+
+    var rows = map_data.split('\n');
+    map = new Array(rows.length - 1);
+    map_name = rows[0];
+    console.log(current_level + ":" + map_name);
+    for(var y = 1; y < rows.length; ++y) {
+        var cols = rows[y].split(',');
+        map[y-1] = new Array(cols.length);
+        for(var x = 0; x < cols.length; ++x) {
+            map[y-1][x] = cols[x] - 1;
+        }
+    }
+    map_loaded = true;
+}
+
+function draw_map() {
+	"use strict";
+
+    map_iterate(function(x, y) {
+        if(map[y][x] > 47) {
+            var x_pos = window_x + x * 32;
+            var y_pos = window_y + y * 32;
+            if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
+                var index = map[y][x];
+                var sx = index%16 * 32;
+                var sy = Math.floor(index/16) * 32;
+                ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
+            }
+        }
+    });
+}
 
 function init() {
+    "use strict";
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     image_manager = new ImageManager();
@@ -261,8 +384,8 @@ function initialize_data() {
 
     image_manager.load_images();
 
-    enemies = new Array();
-    entities = new Array();
+    enemies = [];
+    entities = [];
     enemy_bullets = new Array(max_enemy_bullets);
     bullets = new Array(max_bullets);
     particles = new Array(max_particles);
@@ -283,68 +406,6 @@ function initialize_data() {
     }
 }
 
-function game_loop() {
-
-    get_input();
-
-    if(game_state == CREDITS) {
-        showCreditsScreen();
-    } else if (game_state == RESET_LEVEL) {
-        resetLevel();
-    } else if (game_state == HELP) {
-        showHelpScreen();
-    } else if (game_state == CHAPTERS) {
-        showChaptersScreen();
-    } else if (game_state == LEVELS) {
-        showLevelsScreen();
-    } else if(game_state == INITIALIZE) {
-        showSplashScreen();
-    } else if(game_state == INTERSTITIAL) {
-        showInterstitial();
-    } else if(game_state == LEVEL_END) {
-        showLevelEnd();
-    } else if(game_state == PAUSED) {
-        showPauseScreen();
-    } else if(game_state == RUNNING) {
-        move_stuff();
-        if(player.x + window_x < 200) {
-            window_x += 3;
-        }
-        if(player.x + window_x > canvas.width - 200) {
-            window_x -= 3;
-        }
-        if(player.y + window_y <  100) {
-            window_y += 8;
-        }
-        if(player.y + window_y > canvas.height - 100) {
-            window_y -= 8;
-        }
-
-        clear_screen();
-        //draw_parallax();
-        draw_map();
-        draw_particles();
-        draw_bullets();
-        if(player.alive) {
-            player.draw();
-        }
-        draw_enemies();
-        draw_entities();
-        draw_enemy_bullets();
-        draw_hud();
-        if(reset_level) {
-            resetting_level();
-        }
-    } else if(game_state == GAME_OVER) {
-        showGameOver();
-    }
-    mouseUp = false;
-
-    // pretend the space bar isn't down
-    // so that if you hit the space bar at the end of a level
-    // the game isn't immediately paused
-    keys[32] = false;  
-}
 
 function showCreditsScreen() {
 
@@ -356,11 +417,10 @@ function showCreditsScreen() {
     creditsScreen.draw();
 }
 
-function showSplashScreen() {
-
+function showSplashScreen() 
+{
     if(splashScreen == null) {
         splashScreen = new SplashScreen();
-        splashScreen.load_image();
         console.log("made a splash screen");
     }
     splashScreen.update();
@@ -370,7 +430,6 @@ function showHelpScreen() {
 
     if(helpScreen == null) {
         helpScreen = new HelpScreen();
-        helpScreen.load_image();
     }
     helpScreen.update();
     helpScreen.draw();
@@ -380,7 +439,6 @@ function showChaptersScreen() {
 
     if(chaptersScreen == null) {
         chaptersScreen = new ChaptersScreen();
-        chaptersScreen.load_image();
     }
     chaptersScreen.update();
     chaptersScreen.draw();
@@ -390,7 +448,6 @@ function showLevelsScreen() {
 
     if(levelsScreen == null) {
         levelsScreen = new levelsScreen();
-        levelsScreen.load_image();
     }
     levelsScreen.update();
     levelsScreen.draw();
@@ -400,7 +457,6 @@ function showPauseScreen() {
 
     if(pauseScreen == null) {
         pauseScreen = new PauseScreen();
-        pauseScreen.load_image();
     }
     pauseScreen.update();
     pauseScreen.draw();
@@ -410,7 +466,6 @@ function showInterstitial() {
 
     if(interstitial == null) {
         interstitial = new Interstitial();
-        interstitial.load_image();
     }
     interstitial.update();
     interstitial.draw();
@@ -420,7 +475,6 @@ function showLevelEnd() {
 
     if(level_end == null) {
         level_end = new LevelEnd();
-        level_end.load_image();
     }
     level_end.update();
     level_end.draw();
@@ -430,7 +484,6 @@ function showGameOver() {
 
     if(gameover == null) {
         gameover = new GameOver();
-        gameover.load_image();
     }
     gameover.update();
     gameover.draw();
@@ -495,7 +548,7 @@ function mouseMove(e) {
         left += obj.offsetLeft;
         obj = obj.offsetParent;
     }
- 
+	
     // return relative mouse position
     var posx = e.clientX - left + window.pageXOffset;
     var posy = e.clientY - top + window.pageYOffset;
@@ -517,7 +570,8 @@ function keyUp(evt){ keys[evt.keyCode] = false; }
 //////////////////////////////////////////////////////////////////
 //  UI
 
-function draw_hud() {
+function draw_hud() 
+{
     ctx.drawImage(hud_img, 0, 0, canvas.width, 16);
     ctx.fillStyle = "#000000";
     drawRectangle(40,4, 50, 8, true);
@@ -538,7 +592,8 @@ function draw_hud() {
 
 }
 
-function draw_people_count() {
+function draw_people_count()
+{
     draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
 }
 
@@ -577,7 +632,7 @@ function get_input() {
 
 
     if (88 in keys && keys[88] && player.alive) {
-            dude_fire();
+        dude_fire();
     }
     player.standing = true;
     player.moving_left = 37 in keys && keys[37];
@@ -592,7 +647,7 @@ function get_input() {
     }
 
     if(((32 in keys && keys[32] ) || 
-       (27 in keys && keys[27])) 
+		(27 in keys && keys[27])) 
        && game_state === RUNNING) {
         game_state = PAUSED;
     }
@@ -664,7 +719,7 @@ function make_enemy(x, y, type) {
 
 function make_enemy_bullets() {
     for(var i = 0; i < max_enemy_bullets; ++i) {
-        enemy_bullets[i] = new Array();
+        enemy_bullets[i] = [];
         enemy_bullets[i].alive = false;
         enemy_bullets[i].bullet_timer = 10;
     }
@@ -705,7 +760,7 @@ function move_enemies() {
             }
             enemies[i].y += enemies[i].y_inertia;
             if(pixel_to_tile(enemies[i].x + 2, enemies[i].y + 47) > 0 ||
-                pixel_to_tile(enemies[i].x + 30, enemies[i].y + 47) > 0) {
+               pixel_to_tile(enemies[i].x + 30, enemies[i].y + 47) > 0) {
                 enemies[i].y -= enemies[i].y_inertia;
                 enemies[i].y_inertia = 1;
             }
@@ -723,11 +778,11 @@ function move_enemies() {
                     enemies[i].bullet_timer = 0;
                 }
                 if(enemies[i].type != T_BOSS_1_START) {
-                if(enemies[i].direction == -1) {
-                    enemies[i].current_anim = enemy_anim[WALK_RIGHT];
-                } else {
-                    enemies[i].current_anim = enemy_anim[WALK_LEFT];
-                }
+					if(enemies[i].direction == -1) {
+						enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+					} else {
+						enemies[i].current_anim = enemy_anim[WALK_LEFT];
+					}
                 }
                 continue;  // we're done here, robot stops and shoots
             }
@@ -736,13 +791,13 @@ function move_enemies() {
 
             // if there is a tile in front of them, change directions
             if(pixel_to_tile(enemies[i].x, enemies[i].y + 30) > 0 ||
-                pixel_to_tile(enemies[i].x + 32, enemies[i].y + 30) > 0) {
+               pixel_to_tile(enemies[i].x + 32, enemies[i].y + 30) > 0) {
                 enemies[i].direction = -enemies[i].direction;
                 enemies[i].x += enemies[i].direction;
             }
             // if they would be walking on an empty tile, change direction
             if(pixel_to_tile(enemies[i].x + 32, enemies[i].y + 50) < 1 ||
-                pixel_to_tile(enemies[i].x, enemies[i].y + 50) < 1) {
+               pixel_to_tile(enemies[i].x, enemies[i].y + 50) < 1) {
                 enemies[i].direction = -enemies[i].direction;
             }
 
@@ -798,7 +853,7 @@ function move_enemy_bullets() {
                 for(var k = 0; k < entities.length; ++k) {
                     if(isOnScreen(entities[k]) && entities[k].type == T_CRATE) {
                         if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
-                            entities[k].x, entities[k].y, 32, 32)) {
+									 entities[k].x, entities[k].y, 32, 32)) {
                             enemy_bullets[i].alive = false;
                             fire_particles(enemy_bullets[i]['x'], 
                                            enemy_bullets[i]['y'], 
@@ -846,20 +901,20 @@ function draw_enemies() {
                 enemies[i].frame = 0;
             }
             ctx.drawImage(enemies[i].image, enemies[i].current_anim[enemies[i].frame] * 32, 0, 32, 48,
-                enemies[i].x + window_x,enemies[i].y + window_y, 32, 48);
+						  enemies[i].x + window_x,enemies[i].y + window_y, 32, 48);
         }
     }
 }
 
 
-   
+
 
 //////////////////////////////////////////////////////////////////
 //  SPLASH_SCREEN
 
 function SplashScreen() {
 
-    this.buttons = new Array();
+    this.buttons = [];
 
     var button_width = 300;
     var button_height = 20;
@@ -883,15 +938,8 @@ function SplashScreen() {
                                  button_width, button_height, 
                                  "CREDITS", CREDITS));
 
-
-    this.load_image = function() {
-        image_manager.load_splash_screen_img();
-        console.log("loaded the splash screen image");
-
-    };
-
     this.update = function() {
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
@@ -901,16 +949,12 @@ function SplashScreen() {
     };
 
 }
- //////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 //  LEVEL END
 
 function HelpScreen() {
 
     var wait = 0;
-
-    this.load_image = function() {
-        image_manager.load_splash_screen_img();
-    };
 
     this.update = function() {
         if(wait > 60) {
@@ -920,7 +964,7 @@ function HelpScreen() {
             }
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
@@ -937,7 +981,7 @@ function HelpScreen() {
 
 function PauseScreen() {
 
-    this.buttons = new Array();
+    this.buttons = [];
 
     var button_width = 300;
     var button_height = 20;
@@ -953,23 +997,19 @@ function PauseScreen() {
                                  button_width, button_height, 
                                  "RESUME GAME", RUNNING));
 
-   button_y += button_height + button_padding;
+	button_y += button_height + button_padding;
 
     this.buttons.push(new Button(button_x, button_y, 
                                  button_width, button_height, 
                                  "RESTART LEVEL", RESET_LEVEL));
 
-   button_y += button_height + button_padding;
+	button_y += button_height + button_padding;
 
     this.buttons.push(new Button(button_x, button_y, 
                                  button_width, button_height, 
                                  "RESTART GAME", INITIALIZE));
 
     this.activeButton = this.buttons[0];
-
-    this.load_image = function() {
-        image_manager.load_splash_screen_img();
-    };
 
     this.update = function() {
         if(key_pressed) {
@@ -979,7 +1019,7 @@ function PauseScreen() {
             }
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
@@ -998,22 +1038,17 @@ function Interstitial() {
 
     var wait = 0;
 
-    this.load_image = function() {
-        image_manager.load_splash_screen_2_img();
-        console.log("loaded the splash screen image");
-    };
-
     this.update = function() {
         if(wait > 100) {
             game_state = RUNNING;
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         if(interstitialId == GET_READY) {
-        ctx.drawImage(splash_screen_img, 0, 0);
-        draw_text("GET READY!!!", 80, 248);
+			ctx.drawImage(splash_screen_img, 0, 0);
+			draw_text("GET READY!!!", 80, 248);
             ctx.fillStyle = "#990000";
             ctx.fillRect(80, 260, wait * 2, 10);
         }
@@ -1028,11 +1063,6 @@ function LevelEnd() {
 
     var wait = 0;
 
-    this.load_image = function() {
-        image_manager.load_splash_screen_2_img();
-        console.log("loaded the level end graphic");
-    };
-
     this.update = function() {
         if(wait > 60) {
             if(key_pressed) {
@@ -1042,7 +1072,7 @@ function LevelEnd() {
             }
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
@@ -1058,11 +1088,6 @@ function CreditsScreen() {
 
     var wait = 0;
 
-    this.load_image = function() {
-        image_manager.load_game_over_img();
-        console.log("loaded the splash screen image");
-    };
-
     this.update = function() {
         if(key_pressed || mouseUp) {
             mouseUp = false;
@@ -1072,7 +1097,7 @@ function CreditsScreen() {
             }
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(game_over_img, 0, 0);
@@ -1092,20 +1117,16 @@ function GameOver() {
 
     var wait = 0;
 
-    this.load_image = function() {
-        image_manager.load_game_over_img();
-    };
-
     this.update = function() {
         if(wait > 500) {
             if(key_pressed) {
                 game_state = INITIALIZE;
                 load_map(0);
             }
-             wait = 0;
+            wait = 0;
         }
         wait++;
-     };
+    };
 
     this.draw = function() {
         ctx.drawImage(game_over_img, 0, 0);
@@ -1123,20 +1144,16 @@ function ChaptersScreen() {
 
     var wait = 0;
 
-    this.load_image = function() {
-        image_manager.load_chapters_img();
-    };
-
     this.update = function() {n
-        if(wait > 500) {
-            if(key_pressed) {
-                game_state = INITIALIZE;
-                load_map(0);
-            }
-             wait = 0;
-        }
-        wait++;
-     };
+							  if(wait > 500) {
+								  if(key_pressed) {
+									  game_state = INITIALIZE;
+									  load_map(0);
+								  }
+								  wait = 0;
+							  }
+							  wait++;
+							 };
 
     this.draw = function() {
         ctx.drawImage(chapters_img, 0, 0);
@@ -1222,8 +1239,8 @@ function build_player() {
                     this.x -= 3;
                 }
                 if(pixel_to_tile(this.x + 8, this.y+32) > 0 || pixel_to_tile(this.x + 24, this.y + 32) > 0
-                    || pixel_to_tile(this.x + 8, this.y+15) > 0 || pixel_to_tile(this.x + 24, this.y+15) > 0
-                    || pixel_to_tile(this.x + 8, this.y+48) > 0 || pixel_to_tile(this.x + 24, this.y+48) > 0) {
+                   || pixel_to_tile(this.x + 8, this.y+15) > 0 || pixel_to_tile(this.x + 24, this.y+15) > 0
+                   || pixel_to_tile(this.x + 8, this.y+48) > 0 || pixel_to_tile(this.x + 24, this.y+48) > 0) {
                     this.x += 3;
                     this.standing = true;
                     current_anim = anim[STAND_LEFT];
@@ -1241,8 +1258,8 @@ function build_player() {
                     this.x += 3;
                 }
                 if(pixel_to_tile(this.x + 24, this.y+32) > 0 || pixel_to_tile(this.x + 24, this.y + 32) > 0
-                    || pixel_to_tile(this.x + 24, this.y+15) > 0 || pixel_to_tile(this.x + 24, this.y + 15) > 0
-                    || pixel_to_tile(this.x + 24, this.y+48) > 0 || pixel_to_tile(this.x + 24, this.y+48) > 0) {
+                   || pixel_to_tile(this.x + 24, this.y+15) > 0 || pixel_to_tile(this.x + 24, this.y + 15) > 0
+                   || pixel_to_tile(this.x + 24, this.y+48) > 0 || pixel_to_tile(this.x + 24, this.y+48) > 0) {
                     this.x -= 3;
                     this.standing = true;
                     current_anim = anim[STAND_RIGHT];
@@ -1310,18 +1327,18 @@ function build_player() {
 
     player.draw = function() {
         if(player.alive) {
-        waitIndex++;
-        if(waitIndex > frameRate) {
-            waitIndex = 0;
-            if(this.grounded) {
-                this.frame++;
-            }
-        }
-        if(this.frame >= current_anim.length) {
-            this.frame = 0;
-        }
-        ctx.drawImage(dude_img, current_anim[this.frame] * 32, 0, 32, 48,
-            this.x + window_x,this.y + window_y, 32, 48);
+			waitIndex++;
+			if(waitIndex > frameRate) {
+				waitIndex = 0;
+				if(this.grounded) {
+					this.frame++;
+				}
+			}
+			if(this.frame >= current_anim.length) {
+				this.frame = 0;
+			}
+			ctx.drawImage(dude_img, current_anim[this.frame] * 32, 0, 32, 48,
+						  this.x + window_x,this.y + window_y, 32, 48);
         }
     };
     return player;
@@ -1330,7 +1347,7 @@ function build_player() {
 
 function make_bullets() {
     for(var i = 0; i < max_bullets; i++) {
-        bullets[i] = new Array();
+        bullets[i] = [];
         bullets[i]['alive'] = false;
     }
 }
@@ -1349,7 +1366,7 @@ function move_bullets() {
                 for(var j = 0; j < enemies.length; ++j) {
                     if(enemies[j].alive) {
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
-                            enemies[j].x + 10, enemies[j].y, 12, 48)) {
+												   enemies[j].x + 10, enemies[j].y, 12, 48)) {
                             enemies[j].hit_points -= 1;
                             fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
                             bullets[i].alive = false;
@@ -1377,7 +1394,7 @@ function move_bullets() {
                             //entities[k].x--;
                         }
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
-                            entities[k].x, entities[k].y, 32, 32)) {
+												   entities[k].x, entities[k].y, 32, 32)) {
                             bullets[i].alive = false;
                             fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
                         }
@@ -1461,23 +1478,23 @@ function build_person(x_t, y_t, tp, img, tile, key) {
             this.alive = false;
         }
         /*
-        for(var i = 0; i < entities.length; ++i) {
-            if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
-                if(entities[i].type == T_CRATE) {
-                    if(this.y > entities[i].y) {
-                        entities.y--;
-                    }
-                    if(this.x > entities[i].x) {
-                        //this.x++;
-                        entities.x--;
-                    } else if(this.x < entities[i].x) {
-                        //this.x--;
-                        entities.x++;
-                    }
+          for(var i = 0; i < entities.length; ++i) {
+          if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
+          if(entities[i].type == T_CRATE) {
+          if(this.y > entities[i].y) {
+          entities.y--;
+          }
+          if(this.x > entities[i].x) {
+          //this.x++;
+          entities.x--;
+          } else if(this.x < entities[i].x) {
+          //this.x--;
+          entities.x++;
+          }
 
-                }
-            }
-        }
+          }
+          }
+          }
         */
     };
 
@@ -1557,7 +1574,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
         }
         this.y += this.y_inertia;
         if(pixel_to_tile(this.x, this.y + 32) > 0 ||
-            pixel_to_tile(this.x + 32, this.y + 32) > 0) {
+           pixel_to_tile(this.x + 32, this.y + 32) > 0) {
             this.y -= this.y_inertia;
             this.y_inertia = 1;
         }
@@ -1619,7 +1636,7 @@ function build_door(x_t, y_t, tp, img, tile, key) {
             for(var j = 0; j < enemies.length; ++j) {
                 if(enemies[j].alive) {
                     if(this && intersect(this.x, this.y, 32, 32,
-                        enemies[j].x + 10, enemies[j].y, 12, 48)) {
+										 enemies[j].x + 10, enemies[j].y, 12, 48)) {
                         trigger.state = DEACTIVATED;
                         enemies[j].alive = false;
                         fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
@@ -1795,7 +1812,7 @@ function fire_particles(x, y, size, col) {
 
 function make_particles() {
 	for(var i = 0; i < max_particles; i++) {
-		particles[i] = new Array();
+		particles[i] = [];
 		particles[i]['alive'] = false;
 		particles[i]['x_vel'] = Math.floor(Math.random()*10 - 5);
 		particles[i]['y_vel'] = Math.floor(Math.random()*10 - 5);
@@ -1808,16 +1825,16 @@ function move_particles() {
    		particles[i]['age']++;
    		if(particles[i]['age'] > 100) { particles[i]['alive'] = false; particles[i]['age'] = 0; }
    		if(particles[i]['alive']) {
-               particles[i]['x'] += particles[i]['x_vel'];
+            particles[i]['x'] += particles[i]['x_vel'];
    			if(pixel_to_tile(particles[i]['x'], particles[i]['y']) > 0) {
    				particles[i]['x'] -= particles[i]['x_vel'];
    				particles[i]['x_vel'] = -particles[i]['x_vel'];
    			}
    			particles[i]['y_vel'] += .3 / particles[i].size;
-               particles[i]['y'] += particles[i]['y_vel'];
+            particles[i]['y'] += particles[i]['y_vel'];
    			if(pixel_to_tile(particles[i]['x'], particles[i]['y']) > 0) {
    				particles[i]['y'] -= particles[i]['y_vel'] * gravity / particles[i].size;
-                   particles[i]['y_vel'] = -particles[i]['y_vel'];
+                particles[i]['y_vel'] = -particles[i]['y_vel'];
    			}
    		}
    	}
@@ -1840,62 +1857,6 @@ function draw_particles() {
 }
 
 
-//////////////////////////////////////////////////////////////////
-//  MAP
-
-function load_map(level) {
-    saved_people = 0;
-    total_people = 0;
-    current_boss = null;
-    timer = 0;
-    if(level > 4) {
-        game_state = GAME_OVER;
-        current_level = 1;
-    }
-    var request = new XMLHttpRequest();
-    //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
-    console.log(url);
-    request.open('GET', url);
-    request.onreadystatechange = function() {
-        if (request.readyState != 4 || request.status != 200) {
-          return;
-        }
-        parse_map(request.responseText);
-        initialize_data();
-    };
-    request.send(null);
-}
-
-function parse_map(map_data) {
-    var rows = map_data.split('\n');
-    map = new Array(rows.length - 1);
-    map_name = rows[0];
-    console.log(current_level + ":" + map_name);
-    for(var y = 1; y < rows.length; ++y) {
-        var cols = rows[y].split(',');
-        map[y-1] = new Array(cols.length);
-        for(var x = 0; x < cols.length; ++x) {
-            map[y-1][x] = cols[x] - 1;
-        }
-    }
-    map_loaded = true;
-}
-
-function draw_map() {
-    map_iterate(function(x, y) {
-        if(map[y][x] > 47) {
-            var x_pos = window_x + x * 32;
-            var y_pos = window_y + y * 32;
-            if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
-                var index = map[y][x];
-                var sx = index%16 * 32;
-                var sy = Math.floor(index/16) * 32;
-                ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
-            }
-        }
-    });
-}
 
 function intersectedTile(entity) {
     return pixel_to_tile(entity['x'], entity['y']) > 0;
@@ -1905,12 +1866,12 @@ function pixel_to_tile(x, y) {
     var x_tile = x >> 5;
     var y_tile = y >> 5;
     try {
-    var tile = map[y_tile][x_tile];
-    if(tile > 47) {
-        return map[y_tile][x_tile];
-    } else {
-        return 0;
-    }
+		var tile = map[y_tile][x_tile];
+		if(tile > 47) {
+			return map[y_tile][x_tile];
+		} else {
+			return 0;
+		}
     } catch(err) {
         return 0;
     }
@@ -1941,62 +1902,7 @@ function resetting_level() {
 }
 
 
-//////////////////////////////////////////////////////////////////
-//  IMAGE_MANAGER
 
-function ImageManager() {
-
-    var images_loaded = 0;
-    var directory = "/play/doctor-robot/images/";
-
-    this.load_splash_screen_img = function() {
-        splash_screen_img.src = directory + 'splash_screen_2.png';
-    };
-
-    this.load_splash_screen_2_img = function() {
-        splash_screen_img.src = directory + 'splash_screen_2.png';
-    };
-
-    this.load_game_over_img = function() {
-        game_over_img.src = directory + 'game_over.png';
-    };
-
-    this.load_chapters_img = function() {
-        chapters_img.src = directory + 'chapters.png';
-    };
-    
-
-    this.load_images = function() {
-
-        alert_jetpack_img.src = directory + 'jetpack.png';
-        font_img.src = directory + 'small_font.gif';
-        tile_img.src = directory + 'tiles.png';
-        hud_img.src = directory + 'hud.png';
-        dude_img.src = directory + 'dude_2.png';
-        //map_img.src = directory + 'map.png';
-        map_img.src = directory + 'Infiltrator.png';
-        bullet_img.src = directory + 'bullet.png';
-        enemy_img.src = directory + 'enemy_1b.png';
-        people_img.src = directory + 'person_1.png';
-        enemy_2_img.src = directory + 'enemy_2.png';
-        brain_1_img.src = directory + 'brain_1.png';
-        parallax_img.src = directory + 'parallax.png';
-        images['switch_1'].src = directory + 'switch_1.png';
-        images['switch_2'].src = directory + 'switch_2.png';
-        images['teleport_1'].src = directory + 'teleport_1.png';
-        images['teleport_2'].src = directory + 'teleport_2.png';
-        images['crate_1'].src = directory + 'crate_1.png';
-        images['door_1'].src = directory + 'door_1.png';
-        images['door_2'].src = directory + 'door_2.png';
-        images['door_3'].src = directory + 'door_3.png';
-        images['door_4'].src = directory + 'door_4.png';
-        images['fluid_1'].src = directory + 'fluid_1.png';
-        images['jetpack_icon'].src = directory + 'jetpack_icon.png';
-        images['fuel_overlay'].src = directory + 'fuel_overlay.png';
-        images['jumper'].src = directory + 'jumper.png';
-    };
-
-}
 
 
 //////////////////////////////////////////////////////////////////
@@ -2005,7 +1911,7 @@ function ImageManager() {
 
 function isOnScreen(entity) {
     return !(entity['x'] > canvas.width - window_x || entity['x'] < 0 - window_x ||
-        entity['y'] > canvas.height - window_y || entity['y'] < 0 - window_y);
+			 entity['y'] > canvas.height - window_y || entity['y'] < 0 - window_y);
 
 }
 
@@ -2121,12 +2027,12 @@ function Entity(x_t, y_t, tp, img, tile, key) {
             if(this && this.image) {
                 if(this.type == 13) {
                     ctx.drawImage(this.image,
-                        this.current_anim[this.frame] * 32, 32, 32, 32,
-                        this.x + window_x,this.y + window_y, 32, 32);
+								  this.current_anim[this.frame] * 32, 32, 32, 32,
+								  this.x + window_x,this.y + window_y, 32, 32);
                 } else {
                     ctx.drawImage(this.image,
-                        this.current_anim[this.frame] * 32, 0, 32, 32,
-                        this.x + window_x,this.y + window_y, 32, 32);
+								  this.current_anim[this.frame] * 32, 0, 32, 32,
+								  this.x + window_x,this.y + window_y, 32, 32);
                 }
             }
         }
@@ -2172,13 +2078,13 @@ function make_entity(x, y, type, parent_type) {
     } else if (map[y][x+1] == E_SWITCH) {
         return build_switch(x, y, SWITCH, images['switch_2'], T_EMPTY, type);
 
-    // Teleporter
+		// Teleporter
     } else if(map[y+1][x] == E_TELEPORTER) {
         return build_teleporter(x, y, TELEPORTER, images['teleport_1'], T_EMPTY, type, parent_type);
     } else if(map[y-1][x] == E_TELEPORTER) {
         return build_teleporter(x, y, TELEPORTER, images['teleport_2'], T_EMPTY, type, parent_type);
 
-    // Doors
+		// Doors
     } else if(map[y-1][x] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_1'], EMPTY_BLOCKING, type);
     } else if(map[y+1][x] == E_DOOR) {
@@ -2188,11 +2094,11 @@ function make_entity(x, y, type, parent_type) {
     } else if(map[y][x+1] == E_DOOR) {
         return build_door(x, y, DOOR, images['door_4'], EMPTY_BLOCKING, type);
 
-    // Jetpack
+		// Jetpack
     } else if(type == T_JETPACK) {
         return build_jetpack(x, y, type, images['jetpack_icon'], T_EMPTY);
 
-    // Crate
+		// Crate
     } else if(type == T_CRATE) {
         return build_crate(x, y, type, images['crate_1'], T_EMPTY);
 
@@ -2200,19 +2106,19 @@ function make_entity(x, y, type, parent_type) {
         console.log("building a person");
         return build_person(x, y, type, people_img, T_EMPTY);
 
-    // Exit
+		// Exit
     } else if (type == T_EXIT) {
         return build_exit(x, y, type, null, T_EMPTY);
 
-    // Fluid
+		// Fluid
     } else if (type == T_FLUID || type == 13) {
         return build_fluid(x, y, type, images['fluid_1'], T_EMPTY);
 
-    // Jumper
+		// Jumper
     } else if (type == T_JUMPER) {
         return build_jumper(x, y, type, images['jumper'], T_EMPTY);
 
-    // Unknown
+		// Unknown
     } else {
         return new Entity(x, y, type, images['door_2'], T_EMPTY);
     }
@@ -2230,6 +2136,74 @@ function draw_entities() {
         entities[i].draw();
     }
 }
+
+function game_loop() {
+    "use strict";
+
+    get_input();
+
+    if(game_state === CREDITS) {
+        showCreditsScreen();
+    } else if (game_state === RESET_LEVEL) {
+        resetLevel();
+    } else if (game_state === HELP) {
+        showHelpScreen();
+    } else if (game_state === CHAPTERS) {
+        showChaptersScreen();
+    } else if (game_state === LEVELS) {
+        showLevelsScreen();
+    } else if(game_state === INITIALIZE) {
+        showSplashScreen();
+    } else if(game_state === INTERSTITIAL) {
+        showInterstitial();
+    } else if(game_state === LEVEL_END) {
+        showLevelEnd();
+    } else if(game_state === PAUSED) {
+        showPauseScreen();
+    } else if(game_state === RUNNING) {
+        move_stuff();
+		if(window_x > -3) { window_x = -3; }
+		if(window_y > 8) { window_y = 8; }
+
+        if(player.x + window_x < 200) {
+            window_x += 3;
+        }
+        if(player.x + window_x > canvas.width - 200) {
+            window_x -= 3;
+        }
+        if(player.y + window_y <  100) {
+            window_y += 8;
+        }
+        if(player.y + window_y > canvas.height - 100) {
+            window_y -= 8;
+        }
+
+        clear_screen();
+        //draw_parallax();
+        draw_map();
+        draw_particles();
+        draw_bullets();
+        if(player.alive) {
+            player.draw();
+        }
+        draw_enemies();
+        draw_entities();
+        draw_enemy_bullets();
+        draw_hud();
+        if(reset_level) {
+            resetting_level();
+        }
+    } else if(game_state == GAME_OVER) {
+        showGameOver();
+    }
+    mouseUp = false;
+
+    // pretend the space bar isn't down
+    // so that if you hit the space bar at the end of a level
+    // the game isn't immediately paused
+    keys[32] = false;  
+}
+
 
 Function.prototype.method = function (name, func) {
     this.prototype[name] = func;
