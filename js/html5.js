@@ -1080,7 +1080,7 @@ function LevelEnd() {
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
-        draw_text("CONTAMINATED HUMANS FOUND: 0", 40, 228);
+        draw_text("CONTAMINATED HUMANS FOUND: " + saved_people, 40, 228);
         draw_text("TOTAL TIME WASTED: " + static_time, 80, 260);
     };
 }
