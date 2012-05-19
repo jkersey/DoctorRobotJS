@@ -322,9 +322,7 @@ function load_map(level) {
         current_level = 1;
     }
     request = new XMLHttpRequest();
-    //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
-    console.log(url);
+    url = '//' + loc + '/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     request.open('GET', url);
     request.onreadystatechange = function() {
         if (request.readyState != 4 || request.status != 200) {
