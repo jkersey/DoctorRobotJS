@@ -2038,7 +2038,7 @@ function move_bullets() {
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
 												   entities[k].x, entities[k].y, 32, 32)) {
                             bullets[i].alive = false;
-                            fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
+                            fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
                         }
 
                     }
