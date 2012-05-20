@@ -1911,10 +1911,11 @@ function move_enemies() {
                 enemies[i].direction = -enemies[i].direction;
             }
 
-            if(enemies[i].type == T_BOSS_1_START) {
+            if(enemies[i].type === T_BOSS_1_START) {
+				enemies[i].current_anim = enemy_anim[WALK_RIGHT];
                 //enemies[i].current_anim = boss_anim[BOSS_FULL];
             } else {
-                if(enemies[i].direction == -1) {
+                if(enemies[i].direction === -1) {
                     enemies[i].current_anim = enemy_anim[WALK_RIGHT];
                 } else {
                     enemies[i].current_anim = enemy_anim[WALK_LEFT];
@@ -1923,20 +1924,30 @@ function move_enemies() {
         }
     }
 }
+function isOnScreen(entity) {
+	"use strict";
+
+    return !(entity.x > canvas.width - window_x || entity.x <  - window_x ||
+			 entity.y > canvas.height - window_y || entity.y <  - window_y);
+
+}
 
 
 function move_enemy_bullets() {
+	"use strict";
     enemy_bullet_timer++;
-    var y_offset;
+    var y_offset,
+	i, k,
+	robot_y_top;
 
     if(player.crouching) {
         y_offset = 25;
     } else {
         y_offset = 10;
     }
-    var robot_y_top = player.y + y_offset;
+    robot_y_top = player.y + y_offset;
 
-    for(var i = 0; i < enemy_bullets.length; ++i) {
+    for(i = 0; i < enemy_bullets.length; ++i) {
 
         if(enemy_bullets[i].alive) {
             enemy_bullets[i].alive = isOnScreen(enemy_bullets[i]);
@@ -1944,14 +1955,14 @@ function move_enemy_bullets() {
 
             if (intersectedTile(enemy_bullets[i])) {
                 // back the bullet up
-                enemy_bullets[i]['x'] -= bullet_speed * enemy_bullets[i]['direction'];
+                enemy_bullets[i].x -= bullet_speed * enemy_bullets[i].direction;
                 enemy_bullets[i].alive = false;
-				fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 2, 'red');
+				fire_particles(enemy_bullets[i].x, enemy_bullets[i].y, 2, 'red');
             } else {
                 if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, 
                              player.x + 10, robot_y_top, 12, 30)) {
                     enemy_bullets[i].alive = false;
-                    fire_particles(enemy_bullets[i]['x'], enemy_bullets[i]['y'], 
+                    fire_particles(enemy_bullets[i].x, enemy_bullets[i].y, 
                                    2, 'red');
                     fire_particles(player.x + 16, player.y + 16, 4,'grey');
                     if(!god_mode) {
@@ -1960,13 +1971,13 @@ function move_enemy_bullets() {
                     }
                 }
 
-                for(var k = 0; k < entities.length; ++k) {
-                    if(isOnScreen(entities[k]) && entities[k].type == T_CRATE) {
+                for(k = 0; k < entities.length; ++k) {
+                    if(isOnScreen(entities[k]) && entities[k].type === T_CRATE) {
                         if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
 									 entities[k].x, entities[k].y, 32, 32)) {
                             enemy_bullets[i].alive = false;
-                            fire_particles(enemy_bullets[i]['x'], 
-                                           enemy_bullets[i]['y'], 
+                            fire_particles(enemy_bullets[i].x, 
+                                           enemy_bullets[i].y, 
                                            2, 'red');
                         }
                     }
@@ -1978,26 +1989,30 @@ function move_enemy_bullets() {
 }
 
 function move_bullets() {
+	"use strict";
+
+	var i, j, k;
+
     bullet_timer++;
-    for(var i = 0; i < max_bullets; ++i) {
-        if(bullets[i]['alive']) {
-            bullets[i]['x'] += bullet_speed * bullets[i]['direction'];
-            if(bullets[i]['x'] > canvas.width - window_x || bullets[i]['x'] < 0 - window_x) {
-				bullets[i]['alive'] = false
-			} else if (pixel_to_tile(bullets[i]['x'], bullets[i]['y']) > 0) {
-				bullets[i]['x'] -= bullet_speed * bullets[i]['direction']; // back the bullet up
-                bullets[i]['alive'] = false;
-                fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
+    for(i = 0; i < max_bullets; ++i) {
+        if(bullets[i].alive) {
+            bullets[i].x += bullet_speed * bullets[i].direction;
+            if(bullets[i].x > canvas.width - window_x || bullets[i].x < - window_x) {
+				bullets[i].alive = false;
+			} else if (pixel_to_tile(bullets[i].x, bullets[i].y) > 0) {
+				bullets[i].x -= bullet_speed * bullets[i].direction; // back the bullet up
+                bullets[i].alive = false;
+                fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
             } else {
-                for(var j = 0; j < enemies.length; ++j) {
+                for(j = 0; j < enemies.length; ++j) {
                     if(enemies[j].alive) {
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
 												   enemies[j].x + 10, enemies[j].y, 12, 48)) {
                             enemies[j].hit_points -= 1;
-                            fire_particles(bullets[i]['x'], bullets[i]['y'], 2, 'red');
+                            fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
                             bullets[i].alive = false;
 
-                            if(enemies[j].type == T_BOSS_1_START) {
+                            if(enemies[j].type === T_BOSS_1_START) {
                                 current_boss = enemies[j];
                                 if(enemies[j].hit_points < 33) {
                                     enemies[j].current_anim = boss_anim[BOSS_EMPTY];
@@ -2007,18 +2022,19 @@ function move_bullets() {
                             }
                             if(enemies[j].hit_points <= 0) {
                                 enemies[j].alive = false;
-                                fire_particles(enemies[j]['x'] + 16, enemies[j]['y']+ 16, 4,'red');
+                                fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
                             }
                         }
                     }
                 }
-                for(var k = 0; k < entities.length; ++k) {
-                    if(entities[k].type == T_CRATE) {
+                for(k = 0; k < entities.length; ++k) {
+                    if(entities[k].type === T_CRATE) {
+						/*
                         if(entities[k].x < bullets[i].x) {
                             //entities[k].x++;
                         } else {
                             //entities[k].x--;
-                        }
+                        }*/
                         if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
 												   entities[k].x, entities[k].y, 32, 32)) {
                             bullets[i].alive = false;
@@ -2033,24 +2049,30 @@ function move_bullets() {
 }
 
 function move_particles() {
-    for(var i = 0; i < max_particles; ++i) {
-   		particles[i]['age']++;
-   		if(particles[i]['age'] > 100) { particles[i]['alive'] = false; particles[i]['age'] = 0; }
-   		if(particles[i]['alive']) {
-            particles[i]['x'] += particles[i]['x_vel'];
-   			if(pixel_to_tile(particles[i]['x'], particles[i]['y']) > 0) {
-   				particles[i]['x'] -= particles[i]['x_vel'];
-   				particles[i]['x_vel'] = -particles[i]['x_vel'];
-   			}
-   			particles[i]['y_vel'] += .3 / particles[i].size;
-            particles[i]['y'] += particles[i]['y_vel'];
-   			if(pixel_to_tile(particles[i]['x'], particles[i]['y']) > 0) {
-   				particles[i]['y'] -= particles[i]['y_vel'] * gravity / particles[i].size;
-                particles[i]['y_vel'] = -particles[i]['y_vel'];
-   			}
-   		}
-   	}
+	"use strict";
+	
+	var i;
 
+    for(i = 0; i < max_particles; ++i) {
+		particles[i].age+=1;
+		if(particles[i].age > 100) { 
+			particles[i].alive = false; 
+			particles[i].age = 0; 
+		}
+		if(particles[i].alive) {
+            particles[i].x += particles[i].x_vel;
+			if(pixel_to_tile(particles[i].x, particles[i].y) > 0) {
+				particles[i].x -= particles[i].x_vel;
+				particles[i].x_vel = -particles[i].x_vel;
+			}
+			particles[i].y_vel += 0.3 / particles[i].size;
+            particles[i].y += particles[i].y_vel;
+			if(pixel_to_tile(particles[i].x, particles[i].y) > 0) {
+				particles[i].y -= particles[i].y_vel * gravity / particles[i].size;
+                particles[i].y_vel = -particles[i].y_vel;
+			}
+		}
+	}
 }
 
 function move_stuff() {
@@ -2062,6 +2084,154 @@ function move_stuff() {
     move_entities();
     move_enemies();
     move_enemy_bullets();
+}
+
+function draw_map() {
+	"use strict";
+
+	var x_pos, y_pos, sx, sy, index;
+
+    map_iterate(function(x, y) {
+        if(map[y][x] > 47) {
+            x_pos = window_x + x * 32;
+            y_pos = window_y + y * 32;
+            if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
+                index = map[y][x];
+                sx = index%16 * 32;
+                sy = Math.floor(index/16) * 32;
+                ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
+            }
+        }
+    });
+}
+
+function draw_particles() {
+	"use strict";
+	var i;
+
+	for(i = 0; i < max_particles; ++i) {
+		if(particles[i].alive) {
+            if(particles[i].col === 'red') {
+                ctx.fillStyle = "#" + (99 - particles[i].age) + "0000";
+            } else if(particles[i].col === 'gray') {
+                ctx.fillStyle = "#" + (99 - particles[i].age) + "7777";
+            } else {
+                ctx.fillStyle = "#" + (99 - particles[i].age) + "7777";
+            }
+			drawRectangle(particles[i].x + window_x, particles[i].y + window_y, particles[i].size, particles[i].size, true);
+		}
+	}
+}
+
+function draw_bullets() {
+	"use strict";
+	var i;
+    for(i = 0; i < bullets.length; ++i) {
+        if(bullets[i].alive) {
+            ctx.drawImage(bullet_img, 0, 0, 4, 4, bullets[i].x + window_x, bullets[i].y + window_y, 4, 4);
+        }
+    }
+}
+
+function draw_enemies() {
+	"use strict";
+	var i;
+
+    for(i = 0; i < enemies.length; ++i) {
+        enemies[i].wait_index++;
+        if(enemies[i].alive) {
+            if(enemies[i].wait_index > frameRate) {
+                enemies[i].wait_index = 0;
+                enemies[i].frame++;
+            }
+            if(enemies[i].frame >= enemies[i].current_anim.length) {
+                enemies[i].frame = 0;
+            }
+            ctx.drawImage(enemies[i].image, enemies[i].current_anim[enemies[i].frame] * 32, 0, 32, 48,
+						  enemies[i].x + window_x,enemies[i].y + window_y, 32, 48);
+        }
+    }
+}
+
+function draw_entities() {
+	"use strict";
+	var i;
+    for(i = 0; i < entities.length; ++i) {
+        entities[i].draw();
+    }
+}
+function draw_people_count()
+{
+	"use strict";
+
+    draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
+}
+
+function draw_timer() {
+	"use strict";
+
+	var seconds, mm, ss, tens;
+	
+    seconds = timer / 100 ;
+    mm = ((seconds / 60).toString()).split('.')[0];
+    ss = ((seconds % 60).toString()).split('.')[0];
+    timer++;
+    if(ss < 10) { tens = 0; } else { tens = ''; }
+
+    static_time = mm + ":" + tens + ss;
+
+    draw_text(static_time, 300, 3);
+}
+
+
+function draw_hud() 
+{
+	"use strict";
+
+    ctx.drawImage(hud_img, 0, 0, canvas.width, 16);
+    ctx.fillStyle = "#000000";
+    drawRectangle(40,4, 50, 8, true);
+    ctx.fillStyle = "#990000";
+    drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
+    ctx.drawImage(images.fuel_overlay, 2, 2);
+    //draw_text(current_level + " " + map_name,100, 3);
+
+    draw_timer();
+    draw_people_count();
+    if(current_boss) {
+        drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
+        draw_text("BRAIN BOSS", 40, 34);
+        if(current_boss.hit_points < 1) {
+            current_boss = null;
+        }
+    }
+
+}
+
+
+
+function draw_enemy_bullets() {
+	"use strict";
+	var i;
+
+    for(i = 0; i < enemy_bullets.length; ++i) {
+        if(enemy_bullets[i].alive) {
+            ctx.drawImage(bullet_img, 0, 0, 4, 4, enemy_bullets[i].x + window_x, enemy_bullets[i].y + window_y, 4, 4);
+        }
+    }
+
+}
+
+function resetting_level() {
+	"use strict";
+	
+    reset_timer++;
+    if(reset_timer > 100) {
+        reset_level = false;
+        reset_timer = 0;
+        load_map(current_level);
+        //initialize_data();
+    }
 }
 
 
@@ -2175,22 +2345,6 @@ function initialize_data() {
 
 
 
-function draw_map() {
-	"use strict";
-
-    map_iterate(function(x, y) {
-        if(map[y][x] > 47) {
-            var x_pos = window_x + x * 32;
-            var y_pos = window_y + y * 32;
-            if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
-                var index = map[y][x];
-                var sx = index%16 * 32;
-                var sy = Math.floor(index/16) * 32;
-                ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
-            }
-        }
-    });
-}
 
 function init() {
     "use strict";
@@ -2206,6 +2360,8 @@ function init() {
 
 
 function draw_parallax() {
+	"use strict";
+
     ctx.drawImage(parallax_img, 0, 0, 
                   512, 512, 
                   window_x >> 4 - 5, window_y >> 4, 
@@ -2214,8 +2370,9 @@ function draw_parallax() {
 
 
 function aKeyIsDown() {
+	"use strict";
+
     if(keyIsDown) {
-        console.log(keys[0]);
         keyIsDown = false;
         return true;
     } else {
@@ -2224,6 +2381,8 @@ function aKeyIsDown() {
 }
 
 function mouseIsDown() {
+	"use strict";
+
     if(mouseUp) {
         mouseUp = false;
         return true;
@@ -2233,33 +2392,37 @@ function mouseIsDown() {
 }
 
 window.onmousedown = function() {
-    console.log("mouse down");
+	"use strict";
     mouseDown = true;
-}
+};
 
 
 window.onmouseup = function() {
-    console.log("mouse up");
+	"use strict";
+
     if(mouseDown === true) {
         mouseUp = true;
         mouseDown = false;
     }
-}
+};
 
 function mouseMove(e) {
+	"use strict";
+
+	var top, left, obj, posx, posy;
 
     obj = canvas;
-    var top = 0;
-    var left = 0;
-    while (obj && obj.tagName != 'BODY') {
+    top = 0;
+    left = 0;
+    while (obj && obj.tagName !== 'BODY') {
         top += obj.offsetTop;
         left += obj.offsetLeft;
         obj = obj.offsetParent;
     }
 	
     // return relative mouse position
-    var posx = e.clientX - left + window.pageXOffset;
-    var posy = e.clientY - top + window.pageYOffset;
+    posx = e.clientX - left + window.pageXOffset;
+    posy = e.clientY - top + window.pageYOffset;
 
     mouseX = posx;
     mouseY = posy;
@@ -2271,204 +2434,18 @@ window.addEventListener('mousemove', mouseMove, true);
 window.addEventListener('keydown',keyDown,true);
 window.addEventListener('keyup',keyUp,true);
 
-function keyDown(evt){ keys[evt.keyCode] = true; }
-function keyUp(evt){ keys[evt.keyCode] = false; }
+function keyDown(evt){ "use strict"; keys[evt.keyCode] = true; }
+function keyUp(evt){ "use strict"; keys[evt.keyCode] = false; }
 
 
-//////////////////////////////////////////////////////////////////
-//  UI
 
-function draw_hud() 
-{
-    ctx.drawImage(hud_img, 0, 0, canvas.width, 16);
-    ctx.fillStyle = "#000000";
-    drawRectangle(40,4, 50, 8, true);
-    ctx.fillStyle = "#990000";
-    drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
-    ctx.drawImage(images['fuel_overlay'], 2, 2);
-    //draw_text(current_level + " " + map_name,100, 3);
 
-    draw_timer();
-    draw_people_count();
-    if(current_boss) {
-        drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
-        draw_text("BRAIN BOSS", 40, 34);
-        if(current_boss.hit_points < 1) {
-            current_boss = null;
-        }
-    }
-
-}
-
-function draw_people_count()
-{
-    draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
-}
-
-function draw_timer() {
-    var seconds = timer / 100 ;
-    var mm = ((seconds / 60) + "").split('.')[0];
-    var ss = ((seconds % 60) + "").split('.')[0];
-    timer++;
-    if(ss < 10) { tens = 0; } else { tens = ''; }
-
-    static_time = mm + ":" + tens + ss;
-
-    draw_text(static_time, 300, 3);
-}
-
-
-
-
-//////////////////////////////////////////////////////////////////
-//  INPUT
-
-
-//////////////////////////////////////////////////////////////////
-//  ENEMY
-
-
-
-
-
-function draw_enemy_bullets() {
-    for(var i = 0; i < enemy_bullets.length; ++i) {
-        if(enemy_bullets[i].alive) {
-            ctx.drawImage(bullet_img, 0, 0, 4, 4, enemy_bullets[i].x + window_x, enemy_bullets[i].y + window_y, 4, 4);
-        }
-    }
-
-}
-
-function draw_enemies() {
-
-    for(var i = 0; i < enemies.length; ++i) {
-        enemies[i].wait_index++;
-        if(enemies[i].alive) {
-            if(enemies[i].wait_index > frameRate) {
-                enemies[i].wait_index = 0;
-                enemies[i].frame++;
-            }
-            if(enemies[i].frame >= enemies[i].current_anim.length) {
-                enemies[i].frame = 0;
-            }
-            ctx.drawImage(enemies[i].image, enemies[i].current_anim[enemies[i].frame] * 32, 0, 32, 48,
-						  enemies[i].x + window_x,enemies[i].y + window_y, 32, 48);
-        }
-    }
-}
-
-
-
-
-//////////////////////////////////////////////////////////////////
-//  SPLASH_SCREEN
-
-
-
-//////////////////////////////////////////////////////////////////
-//  PLAYER
-
-
-
-
-
-//////////////////////////////////////////////////////////////////
-//  BULLETS
-
-
-function draw_bullets() {
-    for(var i = 0; i < bullets.length; ++i) {
-        if(bullets[i]['alive']) {
-            ctx.drawImage(bullet_img, 0, 0, 4, 4, bullets[i]['x'] + window_x, bullets[i]['y'] + window_y, 4, 4);
-        }
-    }
-}
-
-//////////////////////////////////////////////////////////////////
-//  FLUID
-
-
-//////////////////////////////////////////////////////////////////
-//  PERSON
-
-
-
-//////////////////////////////////////////////////////////////////
-//  CRATE
-
-
-//////////////////////////////////////////////////////////////////
-//  SWITCH
-
-
-//////////////////////////////////////////////////////////////////
-//  DOOR
-
-
-
-//////////////////////////////////////////////////////////////////
-//  JUMPER
-
-
-
-//////////////////////////////////////////////////////////////////
-//  JETPACK
-
-
-//////////////////////////////////////////////////////////////////
-//  TELEPORTER
-
-//////////////////////////////////////////////////////////////////
-//  PARTICLES
-
-function draw_particles() {
-	for(var i = 0; i < max_particles; ++i) {
-		if(particles[i]['alive']) {
-            if(particles[i]['col'] == 'red') {
-                ctx.fillStyle = "#" + (99 - particles[i]['age']) + "0000";
-            } else if(particles[i]['col'] == 'gray') {
-                ctx.fillStyle = "#" + (99 - particles[i]['age']) + "7777";
-            } else {
-                ctx.fillStyle = "#" + (99 - particles[i]['age']) + "7777";
-            }
-			drawRectangle(particles[i]['x'] + window_x, particles[i]['y'] + window_y, particles[i].size, particles[i].size, true);
-		}
-	}
-}
-
-
-
-
-
-function resetting_level() {
-    reset_timer++;
-    if(reset_timer > 100) {
-        reset_level = false;
-        reset_timer = 0;
-        load_map(current_level);
-        //initialize_data();
-    }
-}
-
-
-
-
-
-//////////////////////////////////////////////////////////////////
-//  UTILITIES
-
-
-function isOnScreen(entity) {
-    return !(entity['x'] > canvas.width - window_x || entity['x'] < 0 - window_x ||
-			 entity['y'] > canvas.height - window_y || entity['y'] < 0 - window_y);
-
-}
 
 
 
 // shim layer with setTimeout fallback
 window.requestAnimFrame = (function(){
+	"use strict";
     return  window.requestAnimationFrame   ||
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame    ||
@@ -2479,32 +2456,21 @@ window.requestAnimFrame = (function(){
         };
 })();
 
-
-
-//////////////////////////////////////////////////////////////////
-//  ENTITY
-
-
-
-
-
-function draw_entities() {
-    for(var i = 0; i < entities.length; ++i) {
-        entities[i].draw();
-    }
-}
-
-
-
 Function.prototype.method = function (name, func) {
+	"use strict";
+
     this.prototype[name] = func;
     return this;
 };
 
 Function.method('inherits', function (parent) {
-    var d = {}, p = (this.prototype = new parent());
+	"use strict";
+	var d, f, r, t, p;
+
+    d = {};
+	p = (this.prototype = new parent());
     this.method('uber', function uber(name) {
-        if (!(name in d)) {
+        if (!(d.hasOwnProperty(name))) {
             d[name] = 0;
         }
         var f, r, t = d[name], v = parent.prototype;
@@ -2516,7 +2482,7 @@ Function.method('inherits', function (parent) {
             f = v[name];
         } else {
             f = p[name];
-            if (f == this[name]) {
+            if (f === this[name]) {
                 f = v[name];
             }
         }
