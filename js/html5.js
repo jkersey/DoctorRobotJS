@@ -62,6 +62,7 @@ var T_JETPACK = 9;
 var T_JUMPER = 10;
 var T_CRATE = 11;
 var T_FLUID = 12;
+var T_PLATFORM = 14;
 var T_EXIT = 15;
 
 var EMPTY_BLOCKING = 255;
@@ -235,6 +236,7 @@ var bullet_img = new Image();
 var parallax_img = new Image();
 var images = [];
 images.crate_1 = new Image();
+images.platform_1 = new Image();
 images.switch_1 = new Image();
 images.switch_2 = new Image();
 images.door_1 = new Image();
@@ -281,6 +283,7 @@ function ImageManager()
 			[images.teleport_1, 'teleport_1.png'],
 			[images.teleport_2, 'teleport_2.png'],
 			[images.crate_1, 'crate_1.png'],
+			[images.platform_1, 'platform.png'],
 			[images.door_1, 'door_1.png'],
 			[images.door_2, 'door_2.png'],
 			[images.door_3, 'door_3.png'],
@@ -345,6 +348,10 @@ function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
 function contains(sx, sy, sw, sh, tx, ty, tw, th) {
 	"use strict";
     return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
+}
+
+function on_top_of(sx, sy, sw, sh, tx, ty, tw, th) {
+    return sx + sw > tx && sx < tx + tw && sy + sh -1 < ty && sy + sh + 1 > ty;
 }
 
 function fire_particles(x, y, size, col) {
@@ -469,6 +476,8 @@ function Entity(x_t, y_t, tp, img, tile, key) {
 
     this.x_tile = x_t;
     this.y_tile = y_t;
+	this.direction = 1;
+	this.y_index = 0;
     this.y_inertia = 0;
     this.type = tp;
     this.key = key;
@@ -486,6 +495,8 @@ function Entity(x_t, y_t, tp, img, tile, key) {
     map[this.y_tile][this.x_tile] = tile;
 
     this.draw = function() {
+		var x_index;
+
         this.wait_index++;
         if(this.alive) {
             if(this.wait_index > frameRate) {
@@ -500,15 +511,15 @@ function Entity(x_t, y_t, tp, img, tile, key) {
                 }
             }
             if(this && this.image) {
+				x_index = this.current_anim[this.frame];
+/*
                 if(this.type === 13) {
-                    ctx.drawImage(this.image,
-								  this.current_anim[this.frame] * 32, 32, 32, 32,
-								  this.x + window_x,this.y + window_y, 32, 32);
-                } else {
-                    ctx.drawImage(this.image,
-								  this.current_anim[this.frame] * 32, 0, 32, 32,
-								  this.x + window_x,this.y + window_y, 32, 32);
-                }
+					y_index = 32;
+				}
+*/
+                ctx.drawImage(this.image, 
+							  x_index * 32, this.y_index, 32, 32,
+							  this.x + window_x,this.y + window_y, 32, 32);
             }
         }
 
@@ -558,6 +569,9 @@ function build_fluid(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
     var entity = new Entity(x_t, y_t, tp, img, tile, key);
+	if(tp === 13) {
+		entity.y_index = 32;
+	}
     entity.current_anim = fluid_anim;
     entity.loop_animation = true;
 
@@ -702,7 +716,40 @@ function build_jetpack(x_t, y_t, tp, img, tile, key) {
         }
     };
     return entity;
+}
 
+function build_platform(x_t, y_t, tp, img, tile, key) {
+	"use strict";
+
+    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+
+    entity.check_player = function() {
+		if(player.y < this.y - 10) {
+			console.log("adjusting");
+			//player.y = this.y - 48;
+		}
+		if(this.y + 16 > player.y) {
+			player.y -= 5;
+		} else {
+			player.y += 5;
+		}
+		if(this.x + 16 > player.x) {
+			player.x -= 2 + this.direction;
+		} else {
+			player.x += 2 + this.direction;
+		}
+    };
+
+	entity.move = function() {
+		this.x += this.direction;
+        if(pixel_to_tile(this.x, this.y) > 0 ||
+		   pixel_to_tile(this.x + 32, this.y) > 0) {
+			this.direction = -this.direction;
+		}
+
+	};
+
+	return entity;
 }
 
 function build_crate(x_t, y_t, tp, img, tile, key) {
@@ -786,6 +833,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
     };
     return entity;
 }
+
 function build_person(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
@@ -852,10 +900,6 @@ function build_jumper(x_t, y_t, tp, img, tile, key) {
     };
     return entity;
 }
-
-
-//////////////////////////////////////////////////////////////////
-//  EXIT
 
 function build_exit(x_t, y_t, tp, img, tile, key) {
 	"use strict";
@@ -1001,6 +1045,10 @@ function make_entity(x, y, type, parent_type) {
     } else if (type === T_JUMPER) {
         return build_jumper(x, y, type, images.jumper, T_EMPTY);
 
+		// Platform
+    } else if (type === T_PLATFORM) {
+        return build_platform(x, y, type, images.platform_1, T_EMPTY);
+
 		// Unknown
     } else {
         return new Entity(x, y, type, images.door_2, T_EMPTY);
@@ -1048,9 +1096,9 @@ function build_player() {
     };
 
     player.move = function() {
-		var i;
+		var i, adjusted_y, adjusted_height;
 
-        this.pause_timer--;
+		this.pause_timer--;
         if(this.pause_timer > 0) {
             return;
         } else {
@@ -1060,9 +1108,23 @@ function build_player() {
         if(this.alive) {
             this.on_a_crate = false;
             for(i = 0; i < entities.length; ++i) {
-                if(intersect(this.x, this.y, 32, 48, entities[i].x, entities[i].y, 32, 32)) {
+				adjusted_y = this.y;
+				adjusted_height = 48;
+				if(this.crouching) {
+					adjusted_y = this.y + 18;
+					adjusted_height = 30;
+				}
+                if(entities[i] && intersect(this.x, adjusted_y, 32, adjusted_height, 
+							 entities[i].x, entities[i].y, 32, 32)) {
                     entities[i].check_player();
                 }
+				if(entities[i].type === T_PLATFORM && 
+				   on_top_of(this.x + 8, this.y, 16, 48, 
+							 entities[i].x, entities[i].y, 32, 32)) {
+					console.log("on a platform");
+					this.x += entities[i].direction;
+					this.on_a_crate = true;
+				}
             }
             this.y_inertia = this.y_inertia + gravity;
             this.y += this.y_inertia;
@@ -1118,11 +1180,15 @@ function build_player() {
                 this.standing = false;
             }
             if(this.up) {
-                if(this.grounded) {
+                if(this.grounded || this.on_a_crate) {
                     this.standing = false;
+					this.y -= 1;
                     this.y_inertia = -9;
                     this.grounded = false;
-                }
+					this.on_a_crate = false;
+					console.log("trying to go up");
+                } else {
+				}
                 if(this.has_jetpack) {
                     this.grounded = false;
                     this.y_inertia = -4;
@@ -1135,7 +1201,7 @@ function build_player() {
                 }
             }
             if(this.down) {
-                if(this.grounded) {
+                if(this.grounded || this.on_a_crate) {
                     this.crouching = true;
                 }
             } else {
@@ -1149,7 +1215,7 @@ function build_player() {
                 }
 
             }
-            if(this.crouching && this.grounded) {
+            if(this.crouching && (this.grounded || this.on_a_crate)) {
                 if(this.direction > 0) {
                     current_anim = anim[CROUCH_RIGHT];
                 } else {
@@ -1686,6 +1752,7 @@ function GameOver() {
 //  Chapters
 
 function ChaptersScreen() {
+	"use strict";
 
     var wait = 0;
 
