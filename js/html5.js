@@ -2502,12 +2502,16 @@ window.addEventListener('mousemove', mouseMove, true);
 window.addEventListener('keydown',keyDown,true);
 window.addEventListener('keyup',keyUp,true);
 
-function keyDown(evt){ "use strict"; keys[evt.keyCode] = true; }
-function keyUp(evt){ "use strict"; keys[evt.keyCode] = false; }
 
+function keyDown(evt){ keys[evt.keyCode] = true; cancelDefaultAction(evt);}
+function keyUp(evt){ keys[evt.keyCode] = false; cancelDefaultAction(evt);}
 
-
-
+function cancelDefaultAction(e) {
+	var evt = e ? e:window.event;
+	if (evt.preventDefault) evt.preventDefault();
+	evt.returnValue = false;
+	return false;
+}
 
 
 
