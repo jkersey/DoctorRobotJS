@@ -1525,7 +1525,7 @@ function SplashScreen() {
     this.draw = function() {
 		var i;
         ctx.drawImage(splash_screen_img, 0, 0);
-		draw_text("ENGINE " + version, 2, 310);
+		draw_text("ENGINE " + version, 2, 308);
 
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
