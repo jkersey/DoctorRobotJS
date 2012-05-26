@@ -946,7 +946,7 @@ function Enemy(x_t, y_t, type, img) {
 
     if(type === T_BOSS_1_START) {
         this.current_anim = boss_anim[BOSS_FULL];
-        this.hit_points = 100;
+        this.hit_points = 10;
     } else {
         this.current_anim = enemy_anim[WALK_LEFT];
         this.hit_points = 1;
@@ -2085,9 +2085,9 @@ function move_bullets() {
 
                             if(enemies[j].type === T_BOSS_1_START) {
                                 current_boss = enemies[j];
-                                if(enemies[j].hit_points < 33) {
+                                if(enemies[j].hit_points < 3) {
                                     enemies[j].current_anim = boss_anim[BOSS_EMPTY];
-                                } else if (enemies[j].hit_points < 66) {
+                                } else if (enemies[j].hit_points < 8) {
                                     enemies[j].current_anim = boss_anim[BOSS_HALF];
                                 }
                             }
