@@ -1873,9 +1873,10 @@ function showGameOver() {
 
 function resetLevel() {
 	"use strict";
-
+	console.log("resetting level");
     reset_level = true;
-    game_state = RUNNING;
+	reset_timer = 100;
+	game_state = RUNNING;
 }
 function enemy_fire(x, y, direc) {
 	"use strict";
@@ -2304,6 +2305,45 @@ function resetting_level() {
     }
 }
 
+function build_frame() {
+    move_stuff();
+	if(window_x > -3) { window_x = -3; }
+	if(window_x < canvas.width - (map[0].length * 32)) { 
+		window_x = canvas.width - (map[0].length * 32); 
+	}
+	if(window_y > 8) { window_y = 8; }
+	if(window_y < canvas.height - (map.length * 32 - 8)) {
+		window_y = canvas.height - (map.length * 32 - 8);
+	}
+    if(player.x + window_x < 200) {
+        window_x += 3;
+    }
+    if(player.x + window_x > canvas.width - 200) {
+        window_x -= 3;
+    }
+    if(player.y + window_y <  100) {
+        window_y += 8;
+    }
+    if(player.y + window_y > canvas.height - 100) {
+        window_y -= 8;
+    }
+	
+    clear_screen();
+    //draw_parallax();
+    draw_map();
+    draw_particles();
+    draw_bullets();
+    if(player.alive) {
+        player.draw();
+    }
+    draw_enemies();
+    draw_entities();
+    draw_enemy_bullets();
+    draw_hud();
+    if(reset_level) {
+        resetting_level();
+    }
+}
 
 function game_loop() {
     "use strict";
@@ -2311,43 +2351,7 @@ function game_loop() {
     get_input();
 
 	if(game_state === RUNNING) {
-        move_stuff();
-		if(window_x > -3) { window_x = -3; }
-		if(window_x < canvas.width - (map[0].length * 32)) { 
-			window_x = canvas.width - (map[0].length * 32); 
-		}
-		if(window_y > 8) { window_y = 8; }
-		if(window_y < canvas.height - (map.length * 32 - 8)) {
-			window_y = canvas.height - (map.length * 32 - 8);
-		}
-        if(player.x + window_x < 200) {
-            window_x += 3;
-        }
-        if(player.x + window_x > canvas.width - 200) {
-            window_x -= 3;
-        }
-        if(player.y + window_y <  100) {
-            window_y += 8;
-        }
-        if(player.y + window_y > canvas.height - 100) {
-            window_y -= 8;
-        }
-
-        clear_screen();
-        //draw_parallax();
-        draw_map();
-        draw_particles();
-        draw_bullets();
-        if(player.alive) {
-            player.draw();
-        }
-        draw_enemies();
-        draw_entities();
-        draw_enemy_bullets();
-        draw_hud();
-        if(reset_level) {
-            resetting_level();
-        }
+		build_frame();
 	} else if(game_state === CREDITS) {
         showCreditsScreen();
     } else if (game_state === RESET_LEVEL) {
