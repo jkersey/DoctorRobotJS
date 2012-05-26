@@ -2310,26 +2310,7 @@ function game_loop() {
 
     get_input();
 
-    if(game_state === CREDITS) {
-        showCreditsScreen();
-    } else if (game_state === RESET_LEVEL) {
-        resetLevel();
-    } else if (game_state === HELP) {
-        showHelpScreen();
-    } else if (game_state === CHAPTERS) {
-        showChaptersScreen();
-    } else if (game_state === LEVELS) {
-		showChaptersScreen();
-        //showLevelsScreen();
-    } else if(game_state === INITIALIZE) {
-        showSplashScreen();
-    } else if(game_state === INTERSTITIAL) {
-        showInterstitial();
-    } else if(game_state === LEVEL_END) {
-        showLevelEnd();
-    } else if(game_state === PAUSED) {
-        showPauseScreen();
-    } else if(game_state === RUNNING) {
+	if(game_state === RUNNING) {
         move_stuff();
 		if(window_x > -3) { window_x = -3; }
 		if(window_x < canvas.width - (map[0].length * 32)) { 
@@ -2367,6 +2348,25 @@ function game_loop() {
         if(reset_level) {
             resetting_level();
         }
+	} else if(game_state === CREDITS) {
+        showCreditsScreen();
+    } else if (game_state === RESET_LEVEL) {
+        resetLevel();
+    } else if (game_state === HELP) {
+        showHelpScreen();
+    } else if (game_state === CHAPTERS) {
+        showChaptersScreen();
+    } else if (game_state === LEVELS) {
+		showChaptersScreen();
+        //showLevelsScreen();
+    } else if(game_state === INITIALIZE) {
+        showSplashScreen();
+    } else if(game_state === INTERSTITIAL) {
+        showInterstitial();
+    } else if(game_state === LEVEL_END) {
+        showLevelEnd();
+    } else if(game_state === PAUSED) {
+        showPauseScreen();
     } else if(game_state === GAME_OVER) {
         showGameOver();
     }
