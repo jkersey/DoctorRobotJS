@@ -220,6 +220,7 @@ jumper_anim[ACTIVATED] = [0, 1, 3, 5, 0];
 var game_images = [];
 
 // images
+var level_button_img = new Image();
 var splash_screen_img = new Image();
 var alert_jetpack_img = new Image();
 var game_over_img = new Image();
@@ -267,6 +268,7 @@ function ImageManager()
     this.load_images = function() {
 
 		game_images = [
+			[level_button_img, 'level_button.png'],
 			[alert_jetpack_img, 'jetpack.png'],
 			[font_img, 'small_font.gif'],
 			[tile_img, 'tiles.png'],
@@ -1435,6 +1437,23 @@ function drawRectangle(x, y, w, h, fill) {
     if (fill) { ctx.fill(); }
 }
 
+function LevelButton(x, y, width, height, text, action) {
+	"use strict";
+	
+	this.inheritsFrom = Button;
+	this.inheritsFrom(x, y, 64, 64, text, action);
+	this.isAButton = "true";
+
+	this.draw = function() {
+		this.move();
+		ctx.drawImage(level_button_img,
+					  0, 0, 64, 64,
+					  this.x, this.y, 64, 64);
+		draw_text(this.text, this.text_x, this.text_y);
+	}
+
+}
+
 function Button(x, y, width, height, text, action) {
 	"use strict";
 
@@ -1507,7 +1526,7 @@ function SplashScreen() {
 
     this.buttons.push(new Button(button_x, button_y, 
                                  button_width, button_height, 
-                                 "START GAME", INTERSTITIAL));
+                                 "START GAME", CHAPTERS));
     button_y += button_height + button_padding;
 
     this.buttons.push(new Button(button_x, button_y, 
@@ -1758,26 +1777,107 @@ function ChaptersScreen() {
 	"use strict";
 
     var wait = 0;
+    this.buttons = [];
+
+    var 
+	button_width = 300,
+    button_height = 20,
+    button_padding = 10,
+    button_x = (canvas.width - button_width) / 2,
+    button_y = 200;
+
+    interstitialId = GET_READY;
+	
+    this.buttons.push(new Button(button_x, button_y, 
+                                 button_width, button_height, 
+                                 "CHAPTER 01", LEVELS));
 
     this.update = function() {
-							  if(wait > 500) {
-								  if(key_pressed) {
-									  game_state = INITIALIZE;
-									  load_map(0);
-								  }
-								  wait = 0;
-							  }
-							  wait++;
-							 };
+	};
 
     this.draw = function() {
+		var i;
         ctx.drawImage(chapters_img, 0, 0);
         draw_text("CHAPTERS",20, 220);
-    };
-
+        for(i = 0; i < this.buttons.length; ++i) {
+            this.buttons[i].draw();
+        }
+	};
 }
 
+function LevelsScreen() {
+	"use strict";
 
+    var wait = 0;
+    this.buttons = [];
+
+    var 
+	button_width = 64,
+    button_height = 64,
+    button_padding = 10,
+    button_x = (canvas.width - button_width) / 2,
+    button_y = 200;
+
+    interstitialId = GET_READY;
+
+	var x = 20;
+	var y = 74;
+	this.buttons.push(makeLevelButton(x, y, '01'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '02'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '03'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '04'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '05'));
+
+	x = 20;
+	y += 74;
+	this.buttons.push(makeLevelButton(x, y, '06'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '07'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '08'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '09'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '10'));
+	x += 74;
+
+	x = 20;
+	y += 74;
+	this.buttons.push(makeLevelButton(x, y, '11'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '12'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '13'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '14'));
+	x += 74;
+	this.buttons.push(makeLevelButton(x, y, '15'));
+	x += 74;
+
+					  
+
+    this.update = function() {
+	};
+
+    this.draw = function() {
+		var i;
+        ctx.drawImage(chapters_img, 0, 0);
+        draw_text("LEVELS",20, 220);
+        for(i = 0; i < this.buttons.length; ++i) {
+            this.buttons[i].draw();
+        }
+	};
+}
+
+function makeLevelButton(x, y, id) {
+
+    return new LevelButton(x, y, 64, 64, id, RUNNING);
+
+}
 
 
 function showCreditsScreen() {
@@ -1820,7 +1920,7 @@ function showChaptersScreen() {
     chaptersScreen.update();
     chaptersScreen.draw();
 }
-/*
+
 function showLevelsScreen() {
 	"use strict";
 
@@ -1830,7 +1930,7 @@ function showLevelsScreen() {
     levelsScreen.update();
     levelsScreen.draw();
 }
-*/
+
 function showPauseScreen() {
 	"use strict";
 
@@ -2361,8 +2461,7 @@ function game_loop() {
     } else if (game_state === CHAPTERS) {
         showChaptersScreen();
     } else if (game_state === LEVELS) {
-		showChaptersScreen();
-        //showLevelsScreen();
+        showLevelsScreen();
     } else if(game_state === INITIALIZE) {
         showSplashScreen();
     } else if(game_state === INTERSTITIAL) {
