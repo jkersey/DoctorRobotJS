@@ -2,7 +2,7 @@
 
 var version = "v0.1.0";
 
-var god_mode = true;
+var god_mode = false;
 var images_loaded = 0;
 
 var mouseX = 0;
@@ -1452,6 +1452,13 @@ function LevelButton(x, y, width, height, text, action) {
 		draw_text(this.text, this.text_x, this.text_y);
 	}
 
+    this.process_click = function() {
+        if(mouseUp) {
+			current_level = this.text;
+			resetLevel();
+            mouseUp = false;
+        }
+    };
 }
 
 function Button(x, y, width, height, text, action) {
@@ -1784,7 +1791,7 @@ function ChaptersScreen() {
     button_height = 20,
     button_padding = 10,
     button_x = (canvas.width - button_width) / 2,
-    button_y = 200;
+    button_y = 50;
 
     interstitialId = GET_READY;
 	
@@ -1797,8 +1804,9 @@ function ChaptersScreen() {
 
     this.draw = function() {
 		var i;
-        ctx.drawImage(chapters_img, 0, 0);
-        draw_text("CHAPTERS",20, 220);
+		ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
+//        ctx.drawImage(chapters_img, 0, 0);
+        draw_text("CHAPTERS",20, 20);
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
@@ -1822,7 +1830,22 @@ function LevelsScreen() {
 
 	var x = 20;
 	var y = 74;
-	this.buttons.push(makeLevelButton(x, y, '01'));
+
+	for(var i = 0; i < 5; ++i) {
+		if (i == 0) {
+			//
+		} else if(x > canvas.width - 140) {
+			x = 20;
+			y += 74;
+		} else {
+			x += 74;
+		}
+		this.buttons.push(makeLevelButton(x, y, (i+1) + ''));		
+	}
+/*
+	var x = 20;
+	var y = 74;
+
 	x += 74;
 	this.buttons.push(makeLevelButton(x, y, '02'));
 	x += 74;
@@ -1857,7 +1880,7 @@ function LevelsScreen() {
 	x += 74;
 	this.buttons.push(makeLevelButton(x, y, '15'));
 	x += 74;
-
+*/
 					  
 
     this.update = function() {
@@ -1866,7 +1889,7 @@ function LevelsScreen() {
     this.draw = function() {
 		var i;
         ctx.drawImage(chapters_img, 0, 0);
-        draw_text("LEVELS",20, 220);
+        draw_text("LEVELS",20, 50);
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
