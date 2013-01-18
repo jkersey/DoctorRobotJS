@@ -10,7 +10,7 @@
 class Database {
 
 	var $user = "root";
-    var $pass = "password";
+    var $pass = "";
     var $host = "127.0.0.1";
     var $name = "doctor_robot";
 
