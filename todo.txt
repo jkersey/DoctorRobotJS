@@ -1,7 +1,0 @@
-[ ] Fix brain animation
-[ ] Invincibility powerup
-[ ] Acid death animation
-[ ] Invincibility animation
-[ ] Fix number graphics
-[ ] rework status bar
-[ ] Chapter screen
