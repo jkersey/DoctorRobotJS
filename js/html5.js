@@ -1,6 +1,6 @@
 /*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false, onevar: false, undef: true, sloppy: true, stupid: true, vars: true */
 
-var version = "v0.1.0";
+game_lib = new GameLib();
 
 var god_mode = false;
 var images_loaded = 0;
@@ -19,7 +19,6 @@ var INTERSTITIAL = 5;
 var timer = 0;
 
 game_state = INITIALIZE;
-var map_name = "";
 var static_time = '';
 
 // interstitial IDs
@@ -39,7 +38,6 @@ var SWITCH = 256;
 var DOOR = 257;
 var TELEPORTER = 258;
 
-var map;
 var map_loaded = false;
 var current_level = '1';
 var current_boss;
@@ -54,8 +52,6 @@ var T_EMPTY = 0;
 var T_PLAYER_START = 1;
 var T_ENEMY_1_START = 3;
 var T_ENEMY_2_START = 4;
-var T_ENEMY_3_START = 5;
-var T_ENEMY_4_START = 6;
 
 var T_BOSS_1_START = 7;
 var T_PERSON = 8;
@@ -73,7 +69,7 @@ var fluid_anim = [0, 1, 2, 3];
 var E_TELEPORTER = 49;
 var E_SWITCH = 48;
 var E_DOOR = 64;
-
+/*
 
 var SWITCH_LEFT = 32;
 var SWITCH_FLOOR = 33;
@@ -105,7 +101,7 @@ var DOOR_5 = 28;
 var DOOR_6 = 29;
 var DOOR_7 = 30;
 var DOOR_8 = 31;
-
+*/
 // animation sequence ids
 var WALK_LEFT = 0;
 var WALK_RIGHT = 1;
@@ -133,52 +129,28 @@ var gameover = null;
 var key_pressed;
 var keyIsDown = false;
 
-var teleporter_anim = [];
-teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
-teleporter_anim[CLOSED] = [5, 5, 5];
 
 // enemies
 var enemies = [];
 var enemy_bullet_timer = 4;
 var max_enemy_bullets = 100;
 var enemy_bullets = [];
-var enemy_anim = [];
-enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
-enemy_anim[WALK_LEFT] = [0, 1, 2, 3];
-enemy_anim[STAND] = [6, 6, 6];
 
 var BOSS_FULL = 0;
 var BOSS_HALF = 1;
 var BOSS_EMPTY = 2;
 
-var boss_anim = [];
-boss_anim[BOSS_FULL] = [0, 1, 2, 3, 4];
-boss_anim[BOSS_HALF] = [5, 6, 7, 8, 9];
-boss_anim[BOSS_EMPTY] = [10, 11, 12, 13, 14];
 
 var person_anim = [];
 person_anim[0] = [0];
 person_anim[1] = [1];
 person_anim[3] = [2, 3, 4, 5, 6, 7, 8, 9];
 
-// particles
-var max_particles = 500;
-var particles = [];
-
 
 // player
 var player;
-var robot_frame = 0;
-var anim = [];
-anim[WALK_RIGHT] = [0, 1, 2, 3, 4, 5];
-anim[WALK_LEFT] = [8, 7, 6, 11, 10, 9];
-anim[JET_RIGHT] = [15, 16, 17];
-anim[JET_LEFT] = [12, 13, 14];
-anim[STAND_LEFT] = [18];
-anim[STAND_RIGHT] = [19];
-anim[CROUCH_LEFT] = [20];
-anim[CROUCH_RIGHT] = [21];
-var current_anim = anim[WALK_RIGHT];
+
+//var robot_frame = 0;
 
 // player bullets
 var bullet_timer = 4;
@@ -193,8 +165,8 @@ var reset_level = false;
 var reset_timer = 0;
 var animating = false;
 
-var inertiaX = 0;
-var inertiaY = 0;
+//var inertiaX = 0;
+//var inertiaY = 0;
 var gravity = 0.5;
 
 var waitIndex = 0;
@@ -205,14 +177,9 @@ var ctx = null;
 var keys = [];
 
 // entities
-var entities = [];
 var entity_anim = [];
 entity_anim[ACTIVATED] = [0, 1, 2];
 entity_anim[DEACTIVATED] = [3, 4, 5];
-
-var door_anim = [];
-door_anim[ACTIVATED] = [5, 4, 3, 2, 1, 0];
-door_anim[DEACTIVATED] = [0, 1, 2, 3, 4, 5];
 
 var jumper_anim = [];
 jumper_anim[ACTIVATED] = [0, 1, 3, 5, 0];
@@ -253,12 +220,12 @@ images.jumper = new Image();
 images.fuel_overlay = new Image();
 
 
-function ImageManager() 
-{
+function ImageManager() {
 	"use strict";
 	var 
 	i,
-    directory = "/play/doctor-robot/images/";
+//    directory = "/play/doctor-robot/images/";
+    directory = "images/";
 
 	this.load_image = function(img, name) {
 		img.src = directory + name;
@@ -311,83 +278,14 @@ function ImageManager()
 
 var image_manager;
 
-function parse_map(map_data) {
-	"use strict";
-
-    var
-	cols,
-	x, y,
-	rows = map_data.split('\n');
-
-    map = [];
-    map_name = rows[0];
-    for(y = 1; y < rows.length; ++y) {
-        cols = rows[y].split(',');
-		if(cols[0] === '0') {
-			break;
-		}
-        map[y-1] = [];
-        for(x = 0; x < cols.length; ++x) {
-			if(cols[x] === '') {
-				break;
-			}
-            map[y-1][x] = cols[x] - 1;
-        }
-    }
-    map_loaded = true;
-}
-
-function vertical_intersect(y, yh, y2, y2h) {
-	"use strict";
-    return y + yh > y2 && y < y2 + y2h;
-
-}
-
-function intersect(sx, sy, sw, sh, tx, ty, tw, th) {
-	"use strict";
-    return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
-}
-
-function contains(sx, sy, sw, sh, tx, ty, tw, th) {
-	"use strict";
-    return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
-}
-
-function on_top_of(sx, sy, sw, sh, tx, ty, tw, th) {
-    return sx + sw > tx && sx < tx + tw && sy + sh -1 < ty && sy + sh + 1 > ty;
-}
-
-function fire_particles(x, y, size, col) {
-	"use strict";
-
-	var 
-	i,
-	num_particles = 10;
-
-	for(i = 0; i < max_particles; ++i) {
-		if(!particles[i].alive) {
-			particles[i].alive = true;
-			particles[i].x = x;
-            particles[i].y = y;
-			particles[i].age = 0;
-            particles[i].size = size;
-            particles[i].col = col;
-			num_particles--;
-			if(num_particles < 0) {
-				break;
-			}
-		}
-	}
-}
-
 
 function get_trigger(id){
 	"use strict";
 	var i;
 
-    for(i = 0; i < entities.length; ++i) {
-        if(entities[i].key === id - 16) {
-            return entities[i];
+    for(i = 0; i < game_lib.entities.length; ++i) {
+        if(game_lib.entities[i].key === id - 16) {
+            return game_lib.entities[i];
         }
     }
     return 0;
@@ -396,59 +294,18 @@ function get_trigger(id){
 function get_target(id) {
 	"use strict";
 	var i;
-    for(i = 0; i < entities.length; ++i) {
-        if(entities[i].key === id + 16) {
-            return entities[i];
+    for(i = 0; i < game_lib.entities.length; ++i) {
+        if(game_lib.entities[i].key === id + 16) {
+            return game_lib.entities[i];
         }
     }
     return 0;
 }
-function pixel_to_tile(x, y) {
-	"use strict";
-
-    var 
-	tile,
-	x_tile = x >> 5,
-    y_tile = y >> 5;
-
-    try {
-		tile = map[y_tile][x_tile];
-		if(tile > 47) {
-			return map[y_tile][x_tile];
-		} else {
-			return 0;
-		}
-    } catch(err) {
-        return 0;
-    }
-}
 
 function intersectedTile(entity) {
 	"use strict";
-    return pixel_to_tile(entity.x, entity.y) > 0;
+    return game_lib.pixel_to_tile(entity.x, entity.y) > 0;
 }
-
-
-function true_pixel_to_tile(x, y) {
-	"use strict";
-    var 
-	x_tile = x >> 5,
-    y_tile = y >> 5;
-    return map[y_tile][x_tile];
-}
-
-function map_iterate(func) {
-	"use strict";
-
-	var x, y;
-
-    for(y = 0; y<map.length; y++) {
-        for(x = 0; x< map[0].length; x++) {
-            func(x, y);
-        }
-    }
-}
-
 
 function make_bullets() {
 	"use strict";
@@ -461,90 +318,13 @@ function make_bullets() {
     }
 }
 
-function make_particles() {
-	"use strict";
-
-	var i;
-
-	for(i = 0; i < max_particles; i++) {
-		particles[i] = [];
-		particles[i].alive = false;
-		particles[i].x_vel = Math.floor(Math.random()*10 - 5);
-		particles[i].y_vel = Math.floor(Math.random()*10 - 5);
-		particles[i].age = 0;
-	}
-}
-function Entity(x_t, y_t, tp, img, tile, key) {
-	"use strict";
-
-    this.x_tile = x_t;
-    this.y_tile = y_t;
-	this.direction = 1;
-	this.y_index = 0;
-    this.y_inertia = 0;
-    this.type = tp;
-    this.key = key;
-    this.x = this.x_tile * TILE_WIDTH;
-    this.y = this.y_tile * TILE_WIDTH;
-    this.image = img;
-    this.current_anim = door_anim[ACTIVATED];
-    this.frame = current_anim.length - 1;
-    this.state = ACTIVATED;
-    this.is_teleportable = false;
-    this.is_being_pushed = false;
-    this.wait_index = 0;
-    this.alive = true;
-    this.loop_animation = false;
-    map[this.y_tile][this.x_tile] = tile;
-
-    this.draw = function() {
-		var x_index;
-
-        this.wait_index++;
-        if(this.alive) {
-            if(this.wait_index > frameRate) {
-                this.wait_index = 0;
-                this.frame++;
-            }
-            if(this.frame >= this.current_anim.length) {
-                if(this.loop_animation) {
-                    this.frame = 0;
-                } else {
-                    this.frame = this.current_anim.length - 1;
-                }
-            }
-            if(this && this.image) {
-				x_index = this.current_anim[this.frame];
-/*
-                if(this.type === 13) {
-					y_index = 32;
-				}
-*/
-                ctx.drawImage(this.image, 
-							  x_index * 32, this.y_index, 32, 32,
-							  this.x + window_x,this.y + window_y, 32, 32);
-            }
-        }
-
-    };
-
-    this.move = function() {
-        // override this
-    };
-    this.check_player = function() {
-        // override this
-    };
-
-}
-
-
 function build_switch(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
 
     entity.move = function() {
-        if(contains(player.x, player.y + 18, 32, 30, this.x, this.y, 32, 32)) {
+        if(game_lib.contains(player.x, player.y + 18, 32, 30, this.x, this.y, 32, 32)) {
             if(!this.is_being_pushed && this.state === ACTIVATED) {
                 this.state = DEACTIVATED;
                 this.current_anim = entity_anim[DEACTIVATED];
@@ -559,7 +339,7 @@ function build_switch(x_t, y_t, tp, img, tile, key) {
                 this.is_being_pushed = true;
             }
         }
-        if(!intersect(player.x + 14, player.y + 18, 4, 30, this.x, this.y, 32, 32) && this.is_being_pushed) {
+        if(!game_lib.intersect(player.x + 14, player.y + 18, 4, 30, this.x, this.y, 32, 32) && this.is_being_pushed) {
             this.is_being_pushed = false;
         }
 
@@ -571,7 +351,7 @@ function build_switch(x_t, y_t, tp, img, tile, key) {
 function build_fluid(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
 	if(tp === 13) {
 		entity.y_index = 32;
 	}
@@ -592,10 +372,14 @@ function build_fluid(x_t, y_t, tp, img, tile, key) {
 function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.parent_type = parent_type;
     entity.state = OPEN;
-    entity.current_anim = teleporter_anim[OPEN];
+    entity.teleporter_anim = [];
+    entity.teleporter_anim[OPEN] = [0, 1, 2, 3, 4];
+    entity.teleporter_anim[CLOSED] = [5, 5, 5];
+
+    entity.current_anim = entity.teleporter_anim[OPEN];
     entity.loop_animation = true;
 
     entity.get_trigger = function() {
@@ -617,8 +401,8 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
 		trigger = this.get_trigger();
 
         if(this.state === OPEN && trigger.state === OPEN) {
-            if(contains(player.x, player.y + 18, 32, 32, this.x, this.y, 32, 32)) {
-                if(map[trigger.y_tile - 1][trigger.x_tile] > 1) {
+            if(game_lib.contains(player.x, player.y + 18, 32, 32, this.x, this.y, 32, 32)) {
+                if(game_lib.map[trigger.y_tile - 1][trigger.x_tile] > 1) {
                     y_modified = trigger.y;
                 } else {
                     y_modified = trigger.y - 20;
@@ -626,32 +410,29 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
                 player.teleport(trigger.x, y_modified);
                 trigger.state = CLOSED;
                 this.state = CLOSED;
-                this.current_anim = teleporter_anim[CLOSED];
-                trigger.current_anim = teleporter_anim[CLOSED];
+                this.current_anim = entity.teleporter_anim[CLOSED];
+                trigger.current_anim = entity.teleporter_anim[CLOSED];
                 return;
             }
-            for(i = 0; i < entities.length; ++i) {
-                if(entities[i].is_teleportable) {
-                    if(contains(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
-                        entities[i].x = trigger.x;
-                        entities[i].y = trigger.y;
+            for(i = 0; i < game_lib.entities.length; ++i) {
+                if(game_lib.entities[i].is_teleportable) {
+                    if(game_lib.contains(game_lib.entities[i].x, game_lib.entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
+                        game_lib.entities[i].x = trigger.x;
+                        game_lib.entities[i].y = trigger.y;
                         this.state = CLOSED;
                         trigger.state = CLOSED;
-                        this.current_anim = teleporter_anim[CLOSED];
-                        trigger.current_anim = teleporter_anim[CLOSED];
+                        this.current_anim = entity.teleporter_anim[CLOSED];
+                        trigger.current_anim = entity.teleporter_anim[CLOSED];
                         return;
                     }
                 }
             }
         }
         if(this.state === CLOSED) {
-            stay_closed = false;
-            if(intersect(player.x, player.y, 32, 32, this.x, this.y, 32, 32)) {
-                stay_closed = true;
-            }
+            stay_closed = game_lib.intersect(player.x, player.y, 32, 32, this.x, this.y, 32, 32);
             if(!stay_closed) {
-                for(i = 0; i < entities.length; ++i) {
-                    if(entities[i].is_teleportable && intersect(entities[i].x, entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
+                for(i = 0; i < game_lib.entities.length; ++i) {
+                    if(game_lib.entities[i].is_teleportable && game_lib.intersect(game_lib.entities[i].x, game_lib.entities[i].y, 32, 32, this.x, this.y, 32, 32)) {
                         stay_closed = true;
                         break;
                     }
@@ -659,7 +440,7 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
             }
             if(!stay_closed) {
                 this.state = OPEN;
-                this.current_anim = teleporter_anim[OPEN];
+                this.current_anim = entity.teleporter_anim[OPEN];
             }
         }
     };
@@ -672,7 +453,11 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
 function build_door(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+
+    entity.door_anim = [];
+    entity.door_anim[ACTIVATED] = [5, 4, 3, 2, 1, 0];
+    entity.door_anim[DEACTIVATED] = [0, 1, 2, 3, 4, 5];
 
     entity.move = function() {
         var 
@@ -681,21 +466,21 @@ function build_door(x_t, y_t, tp, img, tile, key) {
 
         if(trigger.state === DEACTIVATED && this.state !== DEACTIVATED) {
             this.state = DEACTIVATED;
-            this.current_anim = door_anim[DEACTIVATED];
+            this.current_anim = this.door_anim[DEACTIVATED];
             this.frame = 0;
-            map[this.y_tile][this.x_tile] = T_EMPTY;
+            game_lib.map[this.y_tile][this.x_tile] = T_EMPTY;
         } else if(trigger.state === ACTIVATED && this.state !== ACTIVATED) {
             this.state = ACTIVATED;
-            map[this.y_tile][this.x_tile] = EMPTY_BLOCKING;
-            this.current_anim = door_anim[ACTIVATED];
+            game_lib.map[this.y_tile][this.x_tile] = EMPTY_BLOCKING;
+            this.current_anim = this.door_anim[ACTIVATED];
             this.frame = 0;
             for(j = 0; j < enemies.length; ++j) {
                 if(enemies[j].alive) {
-                    if(this && intersect(this.x, this.y, 32, 32,
+                    if(this && game_lib.intersect(this.x, this.y, 32, 32,
 										 enemies[j].x + 10, enemies[j].y, 12, 48)) {
                         trigger.state = DEACTIVATED;
                         enemies[j].alive = false;
-                        fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
+                        game_lib.fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
                     }
                 }
             }
@@ -709,10 +494,10 @@ function build_door(x_t, y_t, tp, img, tile, key) {
 function build_jetpack(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
 
     entity.check_player = function() {
-        if(intersect(player.x, player.y+32,32, 32, this.x, this.y, 32, 32 )) {
+        if(game_lib.intersect(player.x, player.y+32,32, 32, this.x, this.y, 32, 32 )) {
             this.alive = 0;
             player.has_jetpack = true;
             player.jetpack_fuel = 200;
@@ -724,7 +509,7 @@ function build_jetpack(x_t, y_t, tp, img, tile, key) {
 function build_platform(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
 
     entity.check_player = function() {
 		if(player.y < this.y - 10) {
@@ -745,8 +530,8 @@ function build_platform(x_t, y_t, tp, img, tile, key) {
 
 	entity.move = function() {
 		this.x += this.direction;
-        if(pixel_to_tile(this.x, this.y) > 0 ||
-		   pixel_to_tile(this.x + 32, this.y) > 0) {
+        if(game_lib.pixel_to_tile(this.x, this.y) > 0 ||
+		   game_lib.pixel_to_tile(this.x + 32, this.y) > 0) {
 			this.direction = -this.direction;
 		}
 
@@ -758,7 +543,7 @@ function build_platform(x_t, y_t, tp, img, tile, key) {
 function build_crate(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.is_teleportable = true;
 
     entity.check_player = function() {
@@ -772,7 +557,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
             if (this.x - 15 > player.x) {
                 if(player.grounded) {
                     //this.x += 2;
-                    if(pixel_to_tile(this.x + 32, this.y) > 0) {
+                    if(game_lib.pixel_to_tile(this.x + 32, this.y) > 0) {
                         //this.x -= 2;
                         player.x-=4;
                     }
@@ -781,7 +566,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
             } else if (this.x + 15 < player.x) {
                 if(player.grounded) {
                     //this.x -= 2;
-                    if(pixel_to_tile(this.x, this.y) > 0) {
+                    if(game_lib.pixel_to_tile(this.x, this.y) > 0) {
                         //this.x += 2;
                         player.x+=4;
                     }
@@ -796,18 +581,18 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
 		var 
 		i, k;
 
-        for(i = 0; i < entities.length; ++i) {
-            if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
-                if(entities[i].type === T_CRATE) {
-                    if(this.y > entities[i].y) {
-                        entities.y--;
+        for(i = 0; i < game_lib.entities.length; ++i) {
+            if(game_lib.intersect(this.x, this.y, 32, 32, game_lib.entities[i].x, game_lib.entities[i].y, 32, 23)) {
+                if(game_lib.entities[i].type === T_CRATE) {
+                    if(this.y > game_lib.entities[i].y) {
+                        game_lib.entities.y--;
                     }
-                    if(this.x > entities[i].x) {
+                    if(this.x > game_lib.entities[i].x) {
                         //this.x++;
-                        entities.x--;
-                    } else if(this.x < entities[i].x) {
+                        game_lib.entities.x--;
+                    } else if(this.x < game_lib.entities[i].x) {
                         //this.x--;
-                        entities.x++;
+                        game_lib.entities.x++;
                     }
 
                 }
@@ -815,10 +600,10 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
         }
 
         for(k = 0; k < enemies.length; ++k) {
-            if(intersect(this.x, this.y, 32, 32, enemies[k].x, enemies[k].y + 8, 32, 48)) {
+            if(game_lib.intersect(this.x, this.y, 32, 32, enemies[k].x, enemies[k].y + 8, 32, 48)) {
                 if(this.y_inertia > 1 && enemies[k].y_inertia === 1 && this.y < enemies[k].y) {
                     enemies[k].alive = false;
-                    fire_particles(enemies[k].x, enemies[k].y, 4, 'red');
+                    game_lib.fire_particles(enemies[k].x, enemies[k].y, 4, 'red');
                 }
             }
         }
@@ -828,8 +613,8 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
             this.y_inertia = 10;
         }
         this.y += this.y_inertia;
-        if(pixel_to_tile(this.x, this.y + 32) > 0 ||
-           pixel_to_tile(this.x + 32, this.y + 32) > 0) {
+        if(game_lib.pixel_to_tile(this.x, this.y + 32) > 0 ||
+           game_lib.pixel_to_tile(this.x + 32, this.y + 32) > 0) {
             this.y -= this.y_inertia;
             this.y_inertia = 1;
         }
@@ -840,7 +625,7 @@ function build_crate(x_t, y_t, tp, img, tile, key) {
 function build_person(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.is_teleportable = true;
     total_people++;
 
@@ -859,7 +644,7 @@ function build_person(x_t, y_t, tp, img, tile, key) {
         }
         /*
           for(var i = 0; i < entities.length; ++i) {
-          if(intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
+          if(game_lib.intersect(this.x, this.y, 32, 32, entities[i].x, entities[i].y, 32, 23)) {
           if(entities[i].type == T_CRATE) {
           if(this.y > entities[i].y) {
           entities.y--;
@@ -885,12 +670,12 @@ function build_person(x_t, y_t, tp, img, tile, key) {
 function build_jumper(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
 
     entity.loop_animation = false;
 
     entity.check_player = function() {
-        if (contains(player.x, player.y+16,32, 32, this.x, this.y, 32, 32 )) {
+        if (game_lib.contains(player.x, player.y+16,32, 32, this.x, this.y, 32, 32 )) {
             if(player.grounded) {
                 // play animation
                 this.current_anim = jumper_anim[ACTIVATED];
@@ -907,9 +692,9 @@ function build_jumper(x_t, y_t, tp, img, tile, key) {
 function build_exit(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
-    var entity = new Entity(x_t, y_t, tp, img, tile, key);
+    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.move = function() {
-        if (intersect(player.x, player.y+16,32, 32, this.x, this.y, 32, 32 )) {
+        if (game_lib.intersect(player.x, player.y+16,32, 32, this.x, this.y, 32, 32 )) {
             player.x = 33;
             player.y = 33;
             current_level++;
@@ -922,6 +707,16 @@ function build_exit(x_t, y_t, tp, img, tile, key) {
 
 function Enemy(x_t, y_t, type, img) {
 	"use strict";
+
+
+    this.enemy_anim = [];
+    this.enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
+    this.enemy_anim[WALK_LEFT] = [0, 1, 2, 3];
+    this.enemy_anim[STAND] = [6, 6, 6];
+    this.boss_anim = [];
+    this.boss_anim[BOSS_FULL] = [0, 1, 2, 3, 4];
+    this.boss_anim[BOSS_HALF] = [5, 6, 7, 8, 9];
+    this.boss_anim[BOSS_EMPTY] = [10, 11, 12, 13, 14];
 
     this.x_tile = x_t;
     this.y_tile = y_t;
@@ -943,14 +738,14 @@ function Enemy(x_t, y_t, type, img) {
     this.direction = 1;
     this.bullet_timer = 21;
 
-    map[this.y_tile][this.x_tile] = 0;
+    game_lib.map[this.y_tile][this.x_tile] = 0;
 
 
     if(type === T_BOSS_1_START) {
-        this.current_anim = boss_anim[BOSS_FULL];
+        this.current_anim = this.boss_anim[BOSS_FULL];
         this.hit_points = 10;
     } else {
-        this.current_anim = enemy_anim[WALK_LEFT];
+        this.current_anim = this.enemy_anim[WALK_LEFT];
         this.hit_points = 1;
 
     }
@@ -976,12 +771,12 @@ function make_enemies() {
 	"use strict";
 	var x, y;
 
-    for(y = 0; y<map.length; y++) {
-        for(x = 0; x< map[0].length; x++) {
-            if(map[y][x] === T_ENEMY_1_START || 
-               map[y][x] === T_ENEMY_2_START || 
-               map[y][x] === T_BOSS_1_START) {
-                enemies.push(make_enemy(x, y, map[y][x]));
+    for(y = 0; y<game_lib.map.length; y++) {
+        for(x = 0; x< game_lib.map[0].length; x++) {
+            if(game_lib.map[y][x] === T_ENEMY_1_START || 
+               game_lib.map[y][x] === T_ENEMY_2_START || 
+               game_lib.map[y][x] === T_BOSS_1_START) {
+                enemies.push(make_enemy(x, y, game_lib.map[y][x]));
             }
         }
     }
@@ -1003,81 +798,87 @@ function make_enemy_bullets() {
 function make_entity(x, y, type, parent_type) {
 	"use strict";
 
+    var entity;
+
     // Switches
-    if(map[y][x-1] === E_SWITCH) {
-        return build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
-    } else if (map[y][x+1] === E_SWITCH) {
-        return build_switch(x, y, SWITCH, images.switch_2, T_EMPTY, type);
-
+    if(game_lib.map[y][x-1] === E_SWITCH) {
+        entity = build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
+    } else if (game_lib.map[y][x+1] === E_SWITCH) {
+        entity = build_switch(x, y, SWITCH, images.switch_2, T_EMPTY, type);
 		// Teleporter
-    } else if(map[y+1][x] === E_TELEPORTER) {
-        return build_teleporter(x, y, TELEPORTER, images.teleport_1, T_EMPTY, type, parent_type);
-    } else if(map[y-1][x] === E_TELEPORTER) {
-        return build_teleporter(x, y, TELEPORTER, images.teleport_2, T_EMPTY, type, parent_type);
-
+    } else if(game_lib.map[y+1][x] === E_TELEPORTER) {
+        entity = build_teleporter(x, y, TELEPORTER, images.teleport_1, T_EMPTY, type, parent_type);
+    } else if(game_lib.map[y-1][x] === E_TELEPORTER) {
+        entity = build_teleporter(x, y, TELEPORTER, images.teleport_2, T_EMPTY, type, parent_type);
 		// Doors
-    } else if(map[y-1][x] === E_DOOR) {
-        return build_door(x, y, DOOR, images.door_1, EMPTY_BLOCKING, type);
-    } else if(map[y+1][x] === E_DOOR) {
-        return build_door(x, y, DOOR, images.door_2, EMPTY_BLOCKING, type);
-    } else if(map[y][x-1] === E_DOOR) {
-        return build_door(x, y, DOOR, images.door_3, EMPTY_BLOCKING, type);
-    } else if(map[y][x+1] === E_DOOR) {
-        return build_door(x, y, DOOR, images.door_4, EMPTY_BLOCKING, type);
-
+    } else if(game_lib.map[y-1][x] === E_DOOR) {
+        entity = build_door(x, y, DOOR, images.door_1, EMPTY_BLOCKING, type);
+    } else if(game_lib.map[y+1][x] === E_DOOR) {
+        entity = build_door(x, y, DOOR, images.door_2, EMPTY_BLOCKING, type);
+    } else if(game_lib.map[y][x-1] === E_DOOR) {
+        entity = build_door(x, y, DOOR, images.door_3, EMPTY_BLOCKING, type);
+    } else if(game_lib.map[y][x+1] === E_DOOR) {
+        entity = build_door(x, y, DOOR, images.door_4, EMPTY_BLOCKING, type);
 		// Jetpack
     } else if(type === T_JETPACK) {
-        return build_jetpack(x, y, type, images.jetpack_icon, T_EMPTY);
-
+        entity = build_jetpack(x, y, type, images.jetpack_icon, T_EMPTY);
 		// Crate
     } else if(type === T_CRATE) {
-        return build_crate(x, y, type, images.crate_1, T_EMPTY);
-
+        entity = build_crate(x, y, type, images.crate_1, T_EMPTY);
     } else if(type === T_PERSON) {
-        return build_person(x, y, type, people_img, T_EMPTY);
-
+        entity = build_person(x, y, type, people_img, T_EMPTY);
 		// Exit
     } else if (type === T_EXIT) {
-        return build_exit(x, y, type, null, T_EMPTY);
-
+        entity = build_exit(x, y, type, null, T_EMPTY);
 		// Fluid
     } else if (type === T_FLUID || type === 13) {
-        return build_fluid(x, y, type, images.fluid_1, T_EMPTY);
-
+        entity = build_fluid(x, y, type, images.fluid_1, T_EMPTY);
 		// Jumper
     } else if (type === T_JUMPER) {
-        return build_jumper(x, y, type, images.jumper, T_EMPTY);
-
+        entity = build_jumper(x, y, type, images.jumper, T_EMPTY);
 		// Platform
     } else if (type === T_PLATFORM) {
-        return build_platform(x, y, type, images.platform_1, T_EMPTY);
-
+        entity = build_platform(x, y, type, images.platform_1, T_EMPTY);
 		// Unknown
     } else {
-        return new Entity(x, y, type, images.door_2, T_EMPTY);
+        entity = new game_lib.Entity(x, y, type, images.door_2, T_EMPTY);
     }
+
+    return entity;
 }
 
 
 function build_player() {
-	"use strict";
+    "use strict";
 
-    map_iterate(function(x, y) {
-        if(map[y][x] === T_PLAYER_START) {
-            player = make_entity(x, y, map[y][x], T_EMPTY, T_PLAYER_START);
+    //current_anim = anim[WALK_RIGHT];
+
+    game_lib.map_iterate(function(x, y) {
+        if(game_lib.map[y][x] === T_PLAYER_START) {
+            player = make_entity(x, y, game_lib.map[y][x], T_EMPTY, T_PLAYER_START);
             // players are taller than normal stuff
             player.y -= 23;
         }
     });
 
     player.initialize = function() {
-        map_iterate(function(x, y) {
-            if(map[y][x] === T_PLAYER_START) {
+        game_lib.map_iterate(function(x, y) {
+            if(game_lib.map[y][x] === T_PLAYER_START) {
                 this.x = x * 32;
                 this.y = y * 32 - 23;
-                map[y][x] = 0;
+                game_lib.map[y][x] = 0;
             }
         });
+	this.anim = [];
+	this.anim[WALK_RIGHT] = [0, 1, 2, 3, 4, 5];
+	this.anim[WALK_LEFT] = [8, 7, 6, 11, 10, 9];
+	this.anim[JET_RIGHT] = [15, 16, 17];
+	this.anim[JET_LEFT] = [12, 13, 14];
+	this.anim[STAND_LEFT] = [18];
+	this.anim[STAND_RIGHT] = [19];
+	this.anim[CROUCH_LEFT] = [20];
+	this.anim[CROUCH_RIGHT] = [21];
+
         this.direction = 1;
         this.crouching = false;
         this.has_jetpack = true;
@@ -1086,12 +887,12 @@ function build_player() {
         this.moving_right = false;
         this.up = false;
         this.down = false;
-        this.can_teleport = true;
+//        this.can_teleport = true;
         this.alive = true;
         this.pause_timer = 0;
         this.NORMAL = 0;
-        this.TELEPORT_START = 1;
-        this.TELEPORT_END = 2;
+//        this.TELEPORT_START = 1;
+//        this.TELEPORT_END = 2;
         this.target_x = 0;
         this.target_y = 0;
         this.state = this.NORMAL;
@@ -1110,31 +911,31 @@ function build_player() {
 
         if(this.alive) {
             this.on_a_crate = false;
-            for(i = 0; i < entities.length; ++i) {
+            for(i = 0; i < game_lib.entities.length; ++i) {
 				adjusted_y = this.y;
 				adjusted_height = 48;
 				if(this.crouching) {
 					adjusted_y = this.y + 18;
 					adjusted_height = 30;
 				}
-                if(entities[i] && intersect(this.x, adjusted_y, 32, adjusted_height, 
-							 entities[i].x, entities[i].y, 32, 32)) {
-                    entities[i].check_player();
+                if(game_lib.entities[i] && game_lib.intersect(this.x, adjusted_y, 32, adjusted_height, 
+							 game_lib.entities[i].x, game_lib.entities[i].y, 32, 32)) {
+                    game_lib.entities[i].check_player();
                 }
-				if(entities[i].type === T_PLATFORM && 
-				   on_top_of(this.x + 8, this.y, 16, 48, 
-							 entities[i].x, entities[i].y, 32, 32)) {
+				if(game_lib.entities[i].type === T_PLATFORM && 
+				   game_lib.on_top_of(this.x + 8, this.y, 16, 48, 
+							 game_lib.entities[i].x, game_lib.entities[i].y, 32)) {
 					console.log("on a platform");
-					this.x += entities[i].direction;
+					this.x += game_lib.entities[i].direction;
 					this.on_a_crate = true;
 				}
             }
             this.y_inertia = this.y_inertia + gravity;
             this.y += this.y_inertia;
-            if(pixel_to_tile(this.x + 8, this.y+15) > 0 || pixel_to_tile(this.x + 24, this.y+15) > 0) {
+            if(game_lib.pixel_to_tile(this.x + 8, this.y+15) > 0 || game_lib.pixel_to_tile(this.x + 24, this.y+15) > 0) {
                 this.y -= this.y_inertia;
                 this.y_inertia = 0;
-            } else if(this.on_a_crate || pixel_to_tile(this.x + 8, this.y+48) > 0 || pixel_to_tile(this.x + 24, this.y + 48) > 0) {
+            } else if(this.on_a_crate || game_lib.pixel_to_tile(this.x + 8, this.y+48) > 0 || game_lib.pixel_to_tile(this.x + 24, this.y + 48) > 0) {
                 this.y -= this.y_inertia;
                 this.y_inertia = 0;
                 this.grounded = true;
@@ -1145,17 +946,17 @@ function build_player() {
                 if(!this.crouching) {
                     this.x -= 3;
                 }
-                if(pixel_to_tile(this.x + 8, this.y+32) > 0 
-				   || pixel_to_tile(this.x + 24, this.y + 32) > 0
-                   || pixel_to_tile(this.x + 8, this.y+15) > 0 
-				   || pixel_to_tile(this.x + 24, this.y+15) > 0
-                   || pixel_to_tile(this.x + 8, this.y+48) > 0 
-				   || pixel_to_tile(this.x + 24, this.y+48) > 0) {
+                if(game_lib.pixel_to_tile(this.x + 8, this.y+32) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y + 32) > 0
+                   || game_lib.pixel_to_tile(this.x + 8, this.y+15) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y+15) > 0
+                   || game_lib.pixel_to_tile(this.x + 8, this.y+48) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y+48) > 0) {
                     this.x += 3;
                     this.standing = true;
-                    current_anim = anim[STAND_LEFT];
+                    this.current_anim = this.anim[STAND_LEFT];
                 } else {
-                    current_anim = anim[WALK_LEFT];
+                    this.current_anim = this.anim[WALK_LEFT];
                 }
 
                 this.direction = -1;
@@ -1167,17 +968,17 @@ function build_player() {
                     //inertiaX += 1;
                     this.x += 3;
                 }
-                if(pixel_to_tile(this.x + 8, this.y+32) > 0 
-				   || pixel_to_tile(this.x + 24, this.y + 32) > 0
-                   || pixel_to_tile(this.x + 8, this.y+15) > 0 
-				   || pixel_to_tile(this.x + 24, this.y+15) > 0
-                   || pixel_to_tile(this.x + 8, this.y+48) > 0 
-				   || pixel_to_tile(this.x + 24, this.y+48) > 0) {
+                if(game_lib.pixel_to_tile(this.x + 8, this.y+32) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y + 32) > 0
+                   || game_lib.pixel_to_tile(this.x + 8, this.y+15) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y+15) > 0
+                   || game_lib.pixel_to_tile(this.x + 8, this.y+48) > 0 
+				   || game_lib.pixel_to_tile(this.x + 24, this.y+48) > 0) {
                     this.x -= 3;
                     this.standing = true;
-                    current_anim = anim[STAND_RIGHT];
+                    this.current_anim = this.anim[STAND_RIGHT];
                 } else {
-                    current_anim = anim[WALK_RIGHT];
+                    this.current_anim = this.anim[WALK_RIGHT];
                 }
                 this.direction = 1;
                 this.standing = false;
@@ -1197,9 +998,9 @@ function build_player() {
                     this.y_inertia = -4;
                     this.jetpack_fuel -= 1;
                     if(this.direction > 0) {
-                        current_anim = anim[JET_LEFT];
+                        this.current_anim = this.anim[JET_LEFT];
                     } else {
-                        current_anim = anim[JET_RIGHT];
+                        this.current_anim = this.anim[JET_RIGHT];
                     }
                 }
             }
@@ -1212,23 +1013,23 @@ function build_player() {
             }
             if(this.standing) {
                 if(this.direction > 0) {
-                    current_anim = anim[STAND_RIGHT];
+                    this.current_anim = this.anim[STAND_RIGHT];
                 } else {
-                    current_anim = anim[STAND_LEFT];
+                    this.current_anim = this.anim[STAND_LEFT];
                 }
 
             }
             if(this.crouching && (this.grounded || this.on_a_crate)) {
                 if(this.direction > 0) {
-                    current_anim = anim[CROUCH_RIGHT];
+                    this.current_anim = this.anim[CROUCH_RIGHT];
                 } else {
-                    current_anim = anim[CROUCH_LEFT];
+                    this.current_anim = this.anim[CROUCH_LEFT];
                 }
             } else if (this.crouching) {
                 if(this.direction > 0) {
-                    current_anim = anim[STAND_RIGHT];
+                    this.current_anim = this.anim[STAND_RIGHT];
                 } else {
-                    current_anim = anim[STAND_LEFT];
+                    this.current_anim = this.anim[STAND_LEFT];
                 }
             }
             if(this.jetpack_fuel < 0) {
@@ -1251,10 +1052,10 @@ function build_player() {
 					this.frame++;
 				}
 			}
-			if(this.frame >= current_anim.length) {
+			if(this.frame >= this.current_anim.length) {
 				this.frame = 0;
 			}
-			ctx.drawImage(dude_img, current_anim[this.frame] * 32, 0, 32, 48,
+			ctx.drawImage(dude_img, this.current_anim[this.frame] * 32, 0, 32, 48,
 						  this.x + window_x,this.y + window_y, 32, 48);
         }
     };
@@ -1267,19 +1068,19 @@ function make_entities() {
 
     // make doors, switches and trampolines.
     // have to make switches before doors
-    map_iterate(function(x, y) {
-        if(map[y][x] > 15 && map[y][x] < 32) {
-            entities.push(make_entity(x, y, map[y][x], SWITCH));
+    game_lib.map_iterate(function(x, y) {
+        if(game_lib.map[y][x] > 15 && game_lib.map[y][x] < 32) {
+            game_lib.entities.push(make_entity(x, y, game_lib.map[y][x], SWITCH));
         }
     });
-    map_iterate(function(x, y) {
-        if(map[y][x] > 31 && map[y][x] < 48) {
-            entities.push(make_entity(x, y, map[y][x], DOOR));
+    game_lib.map_iterate(function(x, y) {
+        if(game_lib.map[y][x] > 31 && game_lib.map[y][x] < 48) {
+            game_lib.entities.push(make_entity(x, y, game_lib.map[y][x], DOOR));
         }
     });
-    map_iterate(function(x, y) {
-        if(map[y][x] > 7 && map[y][x] < 16) {
-            entities.push(make_entity(x, y, map[y][x], map[y][x]));
+    game_lib.map_iterate(function(x, y) {
+        if(game_lib.map[y][x] > 7 && game_lib.map[y][x] < 16) {
+            game_lib.entities.push(make_entity(x, y, game_lib.map[y][x], game_lib.map[y][x]));
         }
     });
 }
@@ -1330,12 +1131,7 @@ function get_input() {
     player.moving_right = keys.hasOwnProperty('39') && keys[39];
     player.up = keys.hasOwnProperty('90') && keys[90];
 
-    if (keys.hasOwnProperty('40') && keys[40]) {
-        player.down = true;
-    } else {
-        player.down = false;
-        //crouching = false;
-    }
+    player.down = keys.hasOwnProperty('40') && keys[40];
 
     if(((keys.hasOwnProperty('32') && keys[32] ) || 
 		(keys.hasOwnProperty('27') && keys[27])) 
@@ -1361,7 +1157,7 @@ function UIBase(x, y, width, height, action) {
     this.HOVER = 1;
     this.ACTIVATED = 2;
 
-    this.easeStrategy = "FLASH";
+    //this.easeStrategy = "FLASH";
 
     this.animations = [];
     this.animations[this.START] = [0];
@@ -1409,48 +1205,21 @@ function UIBase(x, y, width, height, action) {
 
 }
 
-function clear_screen() {
-	"use strict";
-    ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
-}
-
-function draw_text(str, x, y) {
-	"use strict";
-	var i, sx, sy, index;
-    for (i=0; i<str.length; i++){
-        index = str.charCodeAt(i) - 32;
-        sx = index%10 * 10;
-        sy = Math.floor(index/10) * 10;
-        ctx.drawImage(font_img, sx, sy, 10, 10,
-                      x + (i * 12) , y, 10, 10);
-    }
-}
-
-
-function drawRectangle(x, y, w, h, fill) {
-	"use strict";
-
-	ctx.beginPath();
-	ctx.rect(x, y, w, h);
-    ctx.closePath();
-    ctx.stroke();
-    if (fill) { ctx.fill(); }
-}
 
 function LevelButton(x, y, width, height, text, action) {
 	"use strict";
 	
 	this.inheritsFrom = Button;
 	this.inheritsFrom(x, y, 64, 64, text, action);
-	this.isAButton = "true";
+	//this.isAButton = "true";
 
 	this.draw = function() {
 		this.move();
 		ctx.drawImage(level_button_img,
 					  0, 0, 64, 64,
 					  this.x, this.y, 64, 64);
-		draw_text(this.text, this.text_x, this.text_y);
-	}
+		game_lib.draw_text(this.text, this.text_x, this.text_y);
+	};
 
     this.process_click = function() {
         if(mouseUp) {
@@ -1482,12 +1251,12 @@ function Button(x, y, width, height, text, action) {
         } else if(this.state === this.HOVER) {
             ctx.fillStyle = "#333300";
         }
-        drawRectangle(x,y, width, height, true);
+        game_lib.drawRectangle(x,y, width, height, true);
         ctx.fillStyle = "#000000";
-        draw_text(this.text, this.text_x, this.text_y);
+        game_lib.draw_text(this.text, this.text_x, this.text_y);
     };
 }
-
+/*
 function ImageButton(image, x, y, width, height, action) {
 	"use strict";
 
@@ -1508,6 +1277,7 @@ function ImageButton(image, x, y, width, height, action) {
     };
 
 }
+*/
 
 function Screen(background) {
 	"use strict";
@@ -1551,7 +1321,7 @@ function SplashScreen() {
     this.draw = function() {
 		var i;
         ctx.drawImage(splash_screen_img, 0, 0);
-		draw_text("ENGINE " + version, 2, 308);
+		game_lib.draw_text("ENGINE " + GameLib.VERSION, 2, 308);
 
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
@@ -1579,10 +1349,10 @@ function HelpScreen() {
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
-        draw_text("Z:          FIRE",80, 220);
-        draw_text("X:          JUMP/JETPACK",80, 234);
-        draw_text("DOWN ARROW: CROUCH", 80, 248);
-        draw_text("DO NOT GET SHOT", 80, 262);
+        game_lib.draw_text("Z:          FIRE",80, 220);
+        game_lib.draw_text("X:          JUMP/JETPACK",80, 234);
+        game_lib.draw_text("DOWN ARROW: CROUCH", 80, 248);
+        game_lib.draw_text("DO NOT GET SHOT", 80, 262);
     };
 
 }
@@ -1661,7 +1431,7 @@ function Interstitial() {
     this.draw = function() {
         if(interstitialId === GET_READY) {
 			ctx.drawImage(splash_screen_img, 0, 0);
-			draw_text("GET READY!!!", 80, 248);
+			game_lib.draw_text("GET READY!!!", 80, 248);
             ctx.fillStyle = "#990000";
             ctx.fillRect(80, 260, wait * 2, 10);
         }
@@ -1684,6 +1454,15 @@ function load_map(level) {
         game_state = GAME_OVER;
         current_level = 1;
     }
+    game_lib.map = []; // maps[level];
+    //map = maps[level];
+//    map_iterate(function(x, y) {
+//            map[y][x] = maps[1][y][x] - 1;
+//    });
+
+    console.log("loaded map " + level);
+
+/*
     request = new XMLHttpRequest();
     url = '//' + loc + '/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     request.open('GET', url);
@@ -1692,9 +1471,12 @@ function load_map(level) {
 			return;
         }
         parse_map(request.responseText);
-        initialize_data();
     };
     request.send(null);
+*/
+    game_lib.parse_map(map_csv);
+    initialize_data();
+
 }
 
 
@@ -1716,8 +1498,8 @@ function LevelEnd() {
 
     this.draw = function() {
         ctx.drawImage(splash_screen_img, 0, 0);
-        draw_text("CONTAMINATED HUMANS FOUND: " + saved_people, 40, 228);
-        draw_text("TOTAL TIME WASTED: " + static_time, 80, 260);
+        game_lib.draw_text("CONTAMINATED HUMANS FOUND: " + saved_people, 40, 228);
+        game_lib.draw_text("TOTAL TIME WASTED: " + static_time, 80, 260);
     };
 }
 
@@ -1741,10 +1523,10 @@ function CreditsScreen() {
 
     this.draw = function() {
         ctx.drawImage(game_over_img, 0, 0);
-        draw_text("ART AND PROGRAMMING",20, 220);
-        draw_text("JAMES KERSEY",20, 234);
-        draw_text("MUSIC AND NOISE", 20, 260);
-        draw_text("SPIKE the PERCUSSIONIST", 20, 274);
+        game_lib.draw_text("ART AND PROGRAMMING",20, 220);
+        game_lib.draw_text("JAMES KERSEY",20, 234);
+        game_lib.draw_text("MUSIC AND NOISE", 20, 260);
+        game_lib.draw_text("SPIKE the PERCUSSIONIST", 20, 274);
     };
 
 }
@@ -1770,9 +1552,9 @@ function GameOver() {
 
     this.draw = function() {
         ctx.drawImage(game_over_img, 0, 0);
-        draw_text("CONGRATULATIONS",20, 220);
-        draw_text("YOU HAVE RESCUED THE UNIVERSE",20, 234);
-        draw_text("TAKE A BREAK!", 20, 248);
+        game_lib.draw_text("CONGRATULATIONS",20, 220);
+        game_lib.draw_text("YOU HAVE RESCUED THE UNIVERSE",20, 234);
+        game_lib.draw_text("TAKE A BREAK!", 20, 248);
     };
 
 }
@@ -1806,7 +1588,7 @@ function ChaptersScreen() {
 		var i;
 		ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
 //        ctx.drawImage(chapters_img, 0, 0);
-        draw_text("CHAPTERS",20, 20);
+        game_lib.draw_text("CHAPTERS",20, 20);
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
@@ -1889,7 +1671,7 @@ function LevelsScreen() {
     this.draw = function() {
 		var i;
         ctx.drawImage(chapters_img, 0, 0);
-        draw_text("LEVELS",20, 50);
+        game_lib.draw_text("LEVELS",20, 50);
         for(i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
@@ -2020,8 +1802,8 @@ function move_entities() {
 	"use strict";
 	var i;
     // make sure the entities are even on the screen
-    for(i = 0; i < entities.length; ++i) {
-        entities[i].move();
+    for(i = 0; i < game_lib.entities.length; ++i) {
+        game_lib.entities[i].move();
     }
 }
 
@@ -2033,23 +1815,23 @@ function move_enemies() {
     for(i = 0; i < enemies.length; ++i) {
         if(enemies[i].alive) {
             // check for crate intersections
-            for(k = 0; k < entities.length; ++k) {
-                if(entities[k].type === T_CRATE) {
-                    if(intersect(enemies[i].x, enemies[i].y, 32, 48, 
-                                 entities[k].x, entities[k].y, 32, 32)) {
-                        if(enemies[i].x < entities[k].x) {
+            for(k = 0; k < game_lib.entities.length; ++k) {
+                if(game_lib.entities[k].type === T_CRATE) {
+                    if(game_lib.intersect(enemies[i].x, enemies[i].y, 32, 48, 
+                                 game_lib.entities[k].x, game_lib.entities[k].y, 32, 32)) {
+                        if(enemies[i].x < game_lib.entities[k].x) {
                             enemies[i].x -=4;
                         } else {
                             enemies[i].x += 4;
-                            if(pixel_to_tile(enemies[i].x, enemies[i].y) > 0 ||
-                               pixel_to_tile(enemies[i].x + 32, enemies[i].y) > 0) {
-                                if(enemies[i].x < entities[k].x) {
+                            if(game_lib.pixel_to_tile(enemies[i].x, enemies[i].y) > 0 ||
+                               game_lib.pixel_to_tile(enemies[i].x + 32, enemies[i].y) > 0) {
+                                if(enemies[i].x < game_lib.entities[k].x) {
                                     enemies[i].x +=4;
-                                    entities[k].x += 4;
+                                    game_lib.entities[k].x += 4;
                                     player.x += 4;
                                 } else {
                                     enemies[i].x -=4;
-                                    entities[k].x -= 4;
+                                    game_lib.entities[k].x -= 4;
                                     player.x -= 4;
                                 }
                             }
@@ -2063,13 +1845,13 @@ function move_enemies() {
                 enemies[i].y_inertia = 10;
             }
             enemies[i].y += enemies[i].y_inertia;
-            if(pixel_to_tile(enemies[i].x + 2, enemies[i].y + 47) > 0 ||
-               pixel_to_tile(enemies[i].x + 30, enemies[i].y + 47) > 0) {
+            if(game_lib.pixel_to_tile(enemies[i].x + 2, enemies[i].y + 47) > 0 ||
+               game_lib.pixel_to_tile(enemies[i].x + 30, enemies[i].y + 47) > 0) {
                 enemies[i].y -= enemies[i].y_inertia;
                 enemies[i].y_inertia = 1;
             }
 
-            if(vertical_intersect(enemies[i].y, 48, player.y, 48)) {
+            if(game_lib.vertical_intersect(enemies[i].y, 48, player.y, 48)) {
                 if(enemies[i].x > player.x) {
                     enemies[i].direction = -1;
                 } else {
@@ -2083,9 +1865,9 @@ function move_enemies() {
                 }
                 if(enemies[i].type !== T_BOSS_1_START) {
 					if(enemies[i].direction === -1) {
-						enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+						enemies[i].current_anim = enemies[i].enemy_anim[WALK_RIGHT];
 					} else {
-						enemies[i].current_anim = enemy_anim[WALK_LEFT];
+						enemies[i].current_anim = enemies[i].enemy_anim[WALK_LEFT];
 					}
                 }
                 continue;  // we're done here, robot stops and shoots
@@ -2094,30 +1876,31 @@ function move_enemies() {
             enemies[i].x += enemies[i].direction;
 
             // if there is a tile in front of them, change directions
-            if(pixel_to_tile(enemies[i].x, enemies[i].y + 30) > 0 ||
-               pixel_to_tile(enemies[i].x + 32, enemies[i].y + 30) > 0) {
+            if(game_lib.pixel_to_tile(enemies[i].x, enemies[i].y + 30) > 0 ||
+               game_lib.pixel_to_tile(enemies[i].x + 32, enemies[i].y + 30) > 0) {
                 enemies[i].direction = -enemies[i].direction;
                 enemies[i].x += enemies[i].direction;
             }
             // if they would be walking on an empty tile, change direction
-            if(pixel_to_tile(enemies[i].x + 32, enemies[i].y + 50) < 1 ||
-               pixel_to_tile(enemies[i].x, enemies[i].y + 50) < 1) {
+            if(game_lib.pixel_to_tile(enemies[i].x + 32, enemies[i].y + 50) < 1 ||
+               game_lib.pixel_to_tile(enemies[i].x, enemies[i].y + 50) < 1) {
                 enemies[i].direction = -enemies[i].direction;
             }
 
             if(enemies[i].type === T_BOSS_1_START) {
-				enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+				enemies[i].current_anim = enemies[i].enemy_anim[WALK_RIGHT];
                 //enemies[i].current_anim = boss_anim[BOSS_FULL];
             } else {
                 if(enemies[i].direction === -1) {
-                    enemies[i].current_anim = enemy_anim[WALK_RIGHT];
+                    enemies[i].current_anim = enemies[i].enemy_anim[WALK_RIGHT];
                 } else {
-                    enemies[i].current_anim = enemy_anim[WALK_LEFT];
+                    enemies[i].current_anim = enemies[i].enemy_anim[WALK_LEFT];
                 }
             }
         }
     }
 }
+
 function isOnScreen(entity) {
 	"use strict";
 
@@ -2151,26 +1934,26 @@ function move_enemy_bullets() {
                 // back the bullet up
                 enemy_bullets[i].x -= bullet_speed * enemy_bullets[i].direction;
                 enemy_bullets[i].alive = false;
-				fire_particles(enemy_bullets[i].x, enemy_bullets[i].y, 2, 'red');
+				game_lib.fire_particles(enemy_bullets[i].x, enemy_bullets[i].y, 2, 'red');
             } else {
-                if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, 
+                if(game_lib.intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4, 
                              player.x + 10, robot_y_top, 12, 30)) {
                     enemy_bullets[i].alive = false;
-                    fire_particles(enemy_bullets[i].x, enemy_bullets[i].y, 
+                    game_lib.fire_particles(enemy_bullets[i].x, enemy_bullets[i].y,
                                    2, 'red');
-                    fire_particles(player.x + 16, player.y + 16, 4,'grey');
+                    game_lib.fire_particles(player.x + 16, player.y + 16, 4,'grey');
                     if(!god_mode) {
                         reset_level = true;
                         player.alive = false;
                     }
                 }
 
-                for(k = 0; k < entities.length; ++k) {
-                    if(isOnScreen(entities[k]) && entities[k].type === T_CRATE) {
-                        if(intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
-									 entities[k].x, entities[k].y, 32, 32)) {
+                for(k = 0; k < game_lib.entities.length; ++k) {
+                    if(isOnScreen(game_lib.entities[k]) && game_lib.entities[k].type === T_CRATE) {
+                        if(game_lib.intersect(enemy_bullets[i].x, enemy_bullets[i].y, 4, 4,
+									 game_lib.entities[k].x, game_lib.entities[k].y, 32, 32)) {
                             enemy_bullets[i].alive = false;
-                            fire_particles(enemy_bullets[i].x, 
+                            game_lib.fire_particles(enemy_bullets[i].x,
                                            enemy_bullets[i].y, 
                                            2, 'red');
                         }
@@ -2193,46 +1976,46 @@ function move_bullets() {
             bullets[i].x += bullet_speed * bullets[i].direction;
             if(bullets[i].x > canvas.width - window_x || bullets[i].x < - window_x) {
 				bullets[i].alive = false;
-			} else if (pixel_to_tile(bullets[i].x, bullets[i].y) > 0) {
+			} else if (game_lib.pixel_to_tile(bullets[i].x, bullets[i].y) > 0) {
 				bullets[i].x -= bullet_speed * bullets[i].direction; // back the bullet up
                 bullets[i].alive = false;
-                fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
+                game_lib.fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
             } else {
                 for(j = 0; j < enemies.length; ++j) {
                     if(enemies[j].alive) {
-                        if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
+                        if(bullets[i] && game_lib.intersect(bullets[i].x, bullets[i].y, 4, 4,
 												   enemies[j].x + 10, enemies[j].y, 12, 48)) {
                             enemies[j].hit_points -= 1;
-                            fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
+                            game_lib.fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
                             bullets[i].alive = false;
 
                             if(enemies[j].type === T_BOSS_1_START) {
                                 current_boss = enemies[j];
                                 if(enemies[j].hit_points < 3) {
-                                    enemies[j].current_anim = boss_anim[BOSS_EMPTY];
+                                    enemies[j].current_anim = enemies[j].boss_anim[BOSS_EMPTY];
                                 } else if (enemies[j].hit_points < 8) {
-                                    enemies[j].current_anim = boss_anim[BOSS_HALF];
+                                    enemies[j].current_anim = enemies[j].boss_anim[BOSS_HALF];
                                 }
                             }
                             if(enemies[j].hit_points <= 0) {
                                 enemies[j].alive = false;
-                                fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
+                                game_lib.fire_particles(enemies[j].x + 16, enemies[j].y+ 16, 4,'red');
                             }
                         }
                     }
                 }
-                for(k = 0; k < entities.length; ++k) {
-                    if(entities[k].type === T_CRATE) {
+                for(k = 0; k < game_lib.entities.length; ++k) {
+                    if(game_lib.entities[k].type === T_CRATE) {
 						/*
                         if(entities[k].x < bullets[i].x) {
                             //entities[k].x++;
                         } else {
                             //entities[k].x--;
                         }*/
-                        if(bullets[i] && intersect(bullets[i].x, bullets[i].y, 4, 4,
-												   entities[k].x, entities[k].y, 32, 32)) {
+                        if(bullets[i] && game_lib.intersect(bullets[i].x, bullets[i].y, 4, 4,
+												   game_lib.entities[k].x, game_lib.entities[k].y, 32, 32)) {
                             bullets[i].alive = false;
-                            fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
+                            game_lib.fire_particles(bullets[i].x, bullets[i].y, 2, 'red');
                         }
 
                     }
@@ -2242,80 +2025,19 @@ function move_bullets() {
     }
 }
 
-function move_particles() {
-	"use strict";
-	
-	var i;
-
-    for(i = 0; i < max_particles; ++i) {
-		particles[i].age+=1;
-		if(particles[i].age > 100) { 
-			particles[i].alive = false; 
-			particles[i].age = 0; 
-		}
-		if(particles[i].alive) {
-            particles[i].x += particles[i].x_vel;
-			if(pixel_to_tile(particles[i].x, particles[i].y) > 0) {
-				particles[i].x -= particles[i].x_vel;
-				particles[i].x_vel = -particles[i].x_vel;
-			}
-			particles[i].y_vel += 0.3 / particles[i].size;
-            particles[i].y += particles[i].y_vel;
-			if(pixel_to_tile(particles[i].x, particles[i].y) > 0) {
-				particles[i].y -= particles[i].y_vel * gravity / particles[i].size;
-                particles[i].y_vel = -particles[i].y_vel;
-			}
-		}
-	}
-}
 
 function move_stuff() {
 	"use strict";
 
+    game_lib.move_stuff();
+
     player.move();
     move_bullets();
-    move_particles();
     move_entities();
     move_enemies();
     move_enemy_bullets();
 }
 
-function draw_map() {
-	"use strict";
-
-	var x_pos, y_pos, sx, sy, index;
-
-    map_iterate(function(x, y) {
-        if(map[y][x] > 47) {
-            x_pos = window_x + x * 32;
-            y_pos = window_y + y * 32;
-            if(x_pos > -32 || x_pos < ctx.width || y_pos > -32 || y_pos < ctx.height) {
-                index = map[y][x];
-                sx = index%16 * 32;
-                sy = Math.floor(index/16) * 32;
-                ctx.drawImage(map_img, sx, sy, 32, 32, x_pos, y_pos, 32, 32);
-            }
-        }
-    });
-}
-
-function draw_particles() {
-	"use strict";
-	var i;
-
-	for(i = 0; i < max_particles; ++i) {
-		if(particles[i].alive) {
-            if(particles[i].col === 'red') {
-                ctx.fillStyle = "#" + (99 - particles[i].age) + "0000";
-            } else if(particles[i].col === 'gray') {
-                ctx.fillStyle = "#" + (99 - particles[i].age) + "7777";
-            } else {
-                ctx.fillStyle = "#" + (99 - particles[i].age) + "7777";
-            }
-			drawRectangle(particles[i].x + window_x, particles[i].y + window_y, particles[i].size, particles[i].size, true);
-		}
-	}
-}
 
 function draw_bullets() {
 	"use strict";
@@ -2347,18 +2069,11 @@ function draw_enemies() {
     }
 }
 
-function draw_entities() {
-	"use strict";
-	var i;
-    for(i = 0; i < entities.length; ++i) {
-        entities[i].draw();
-    }
-}
 function draw_people_count()
 {
 	"use strict";
 
-    draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
+    game_lib.draw_text("RESCUED: " + saved_people + "/" + total_people, 100, 3);
 }
 
 function draw_timer() {
@@ -2374,7 +2089,7 @@ function draw_timer() {
 
     static_time = mm + ":" + tens + ss;
 
-    draw_text(static_time, 300, 3);
+    game_lib.draw_text(static_time, 300, 3);
 }
 
 
@@ -2384,17 +2099,17 @@ function draw_hud()
 
     ctx.drawImage(hud_img, 0, 0, canvas.width, 16);
     ctx.fillStyle = "#000000";
-    drawRectangle(40,4, 50, 8, true);
+    game_lib.drawRectangle(40,4, 50, 8, true);
     ctx.fillStyle = "#990000";
-    drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
+    game_lib.drawRectangle(40, 4, player.jetpack_fuel/4, 8, true);
     ctx.drawImage(images.fuel_overlay, 2, 2);
     //draw_text(current_level + " " + map_name,100, 3);
 
     draw_timer();
     draw_people_count();
     if(current_boss) {
-        drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
-        draw_text("BRAIN BOSS", 40, 34);
+        game_lib.drawRectangle(40, 24, current_boss.hit_points*2, 8, true);
+        game_lib.draw_text("BRAIN BOSS", 40, 34);
         if(current_boss.hit_points < 1) {
             current_boss = null;
         }
@@ -2431,12 +2146,12 @@ function resetting_level() {
 function build_frame() {
     move_stuff();
 	if(window_x > -3) { window_x = -3; }
-	if(window_x < canvas.width - (map[0].length * 32)) { 
-		window_x = canvas.width - (map[0].length * 32); 
+	if(window_x < canvas.width - (game_lib.map[0].length * 32)) { 
+		window_x = canvas.width - (game_lib.map[0].length * 32); 
 	}
 	if(window_y > 8) { window_y = 8; }
-	if(window_y < canvas.height - (map.length * 32 - 8)) {
-		window_y = canvas.height - (map.length * 32 - 8);
+	if(window_y < canvas.height - (game_lib.map.length * 32 - 8)) {
+		window_y = canvas.height - (game_lib.map.length * 32 - 8);
 	}
     if(player.x + window_x < 200) {
         window_x += 3;
@@ -2451,16 +2166,13 @@ function build_frame() {
         window_y -= 8;
     }
 	
-    clear_screen();
-    //draw_parallax();
-    draw_map();
-    draw_particles();
+    game_lib.game_loop();
+
     draw_bullets();
     if(player.alive) {
         player.draw();
     }
     draw_enemies();
-    draw_entities();
     draw_enemy_bullets();
     draw_hud();
     if(reset_level) {
@@ -2470,7 +2182,6 @@ function build_frame() {
 
 function game_loop() {
     "use strict";
-
     get_input();
 
 	if(game_state === RUNNING) {
@@ -2507,22 +2218,21 @@ function game_loop() {
 
 function animate() {
 	"use strict";
-
     window.requestAnimFrame(animate);
     game_loop();
 }
 function initialize_data() {
 	"use strict";
 
+    console.log("initializing data");
     image_manager.load_images();
 
     enemies = [];
-    entities = [];
+    game_lib.entities = [];
     enemy_bullets = [];
     bullets = [];
-    particles = [];
     make_bullets();
-	make_particles();
+    game_lib.make_particles();
     make_entities();
     make_enemies();
     make_enemy_bullets();
@@ -2538,22 +2248,16 @@ function initialize_data() {
     }
 }
 
-
-
-
-
 function init() {
     "use strict";
+    console.log("initializing");
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     image_manager = new ImageManager();
     ctx.mozImageSmoothingEnabled = false;
     current_level = 1;
-    load_map("1");
+    load_map(1);
 }
-
-
-
 
 function draw_parallax() {
 	"use strict";
@@ -2624,6 +2328,8 @@ function mouseMove(e) {
     mouseY = posy;
 }
 
+game_lib = new GameLib();
+//var map = game_lib.map;
 
 window.onload = init;
 window.addEventListener('mousemove', mouseMove, true);
@@ -2693,3 +2399,4 @@ Function.method('inherits', function (parent) {
     });
     return this;
 });
+console.log("loaded html5.js");
