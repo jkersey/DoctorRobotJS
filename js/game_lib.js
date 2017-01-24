@@ -61,12 +61,14 @@ GameLib.prototype.parse_map = function(map_data) {
     console.log("parsing map");
 
     var	cols, x, y,
-	rows = map_data.split('|');
+	rows = map_data.split('\n');
+    console.log("got " + rows.length + " rows");
 
     this.map = [];
     //map_name = rows[0];
     for(y = 1; y < rows.length; ++y) {
         cols = rows[y].split(',');
+        console.log("got " + cols.length + " columns");
 	if(cols[0] === '0') {
 	    break;
 	}
@@ -79,6 +81,7 @@ GameLib.prototype.parse_map = function(map_data) {
         }
     }
     this.map_loaded = true;
+    console.log("Loaded map");
 };
 
 GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
@@ -122,6 +125,9 @@ GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
             }
             if(this && this.image) {
 		x_index = this.current_anim[this.frame];
+                if(this.type === 256) {
+                    console.log("index is " + this.frame)
+                }
                 ctx.drawImage(this.image, 
 			      x_index * 32, this.y_index, 32, 32,
 			      this.x + window_x,this.y + window_y, 32, 32);
@@ -186,7 +192,6 @@ GameLib.prototype.draw_map = function() {
 GameLib.prototype.draw_particles = function() {
     "use strict";
     var i;
-    console.log(GameLib.MAX_PARTICLES);
     for(i = 0; i < GameLib.MAX_PARTICLES; ++i) {
         if(this.particles[i].alive) {
             if(this.particles[i].col === 'red') {

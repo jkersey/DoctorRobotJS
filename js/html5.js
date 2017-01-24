@@ -1,6 +1,10 @@
 /*global clearInterval: false, clearTimeout: false, document: false, event: false, frames: false, history: false, Image: false, location: false, name: false, navigator: false, Option: false, parent: false, screen: false, setInterval: false, setTimeout: false, window: false, XMLHttpRequest: false, onevar: false, undef: true, sloppy: true, stupid: true, vars: true */
 
+console.log("startup");
+
 game_lib = new GameLib();
+
+console.log("got gamelib");
 
 var god_mode = false;
 var images_loaded = 0;
@@ -39,7 +43,7 @@ var DOOR = 257;
 var TELEPORTER = 258;
 
 var map_loaded = false;
-var current_level = '1';
+var current_level = '0';
 var current_boss;
 
 var saved_people = 0;
@@ -178,6 +182,7 @@ var keys = [];
 
 // entities
 var entity_anim = [];
+entity_anim[INITIALIZE] = [0, 0, 0];
 entity_anim[ACTIVATED] = [0, 1, 2];
 entity_anim[DEACTIVATED] = [3, 4, 5];
 
@@ -322,6 +327,8 @@ function build_switch(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
     var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    entity.current_anim = entity_anim[ACTIVATED];
+    entity.current_frame = entity_anim[ACTIVATED].length - 1;
 
     entity.move = function() {
         if(game_lib.contains(player.x, player.y + 18, 32, 30, this.x, this.y, 32, 32)) {
@@ -458,6 +465,8 @@ function build_door(x_t, y_t, tp, img, tile, key) {
     entity.door_anim = [];
     entity.door_anim[ACTIVATED] = [5, 4, 3, 2, 1, 0];
     entity.door_anim[DEACTIVATED] = [0, 1, 2, 3, 4, 5];
+    entity.current_anim = entity.door_anim[ACTIVATED];
+    entity.current_frame = entity.door_anim[ACTIVATED].length - 1;
 
     entity.move = function() {
         var 
@@ -495,9 +504,11 @@ function build_jetpack(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
     var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    console.log("jetpack fuel is " + tp);
+    entity.frame = 1;
 
     entity.check_player = function() {
-        if(game_lib.intersect(player.x, player.y+32,32, 32, this.x, this.y, 32, 32 )) {
+        if(this.alive === 1 && game_lib.intersect(player.x, player.y+32,32, 32, this.x, this.y, 32, 32 )) {
             this.alive = 0;
             player.has_jetpack = true;
             player.jetpack_fuel = 200;
@@ -627,6 +638,9 @@ function build_person(x_t, y_t, tp, img, tile, key) {
 
     var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.is_teleportable = true;
+    entity.frame = 0;
+    entity.current_anim = person_anim[0];
+
     total_people++;
 
     entity.check_player = function() {
@@ -671,6 +685,8 @@ function build_jumper(x_t, y_t, tp, img, tile, key) {
 	"use strict";
 
     var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    entity.current_anim = jumper_anim[ACTIVATED];
+    entity.frame = 0;
 
     entity.loop_animation = false;
 
@@ -852,6 +868,7 @@ function build_player() {
     "use strict";
 
     //current_anim = anim[WALK_RIGHT];
+    player = Object;
 
     game_lib.map_iterate(function(x, y) {
         if(game_lib.map[y][x] === T_PLAYER_START) {
@@ -1211,7 +1228,6 @@ function LevelButton(x, y, width, height, text, action) {
 	
 	this.inheritsFrom = Button;
 	this.inheritsFrom(x, y, 64, 64, text, action);
-	//this.isAButton = "true";
 
 	this.draw = function() {
 		this.move();
@@ -1223,7 +1239,7 @@ function LevelButton(x, y, width, height, text, action) {
 
     this.process_click = function() {
         if(mouseUp) {
-			current_level = this.text;
+			current_level = this.text-1;
 			resetLevel();
             mouseUp = false;
         }
@@ -1452,30 +1468,22 @@ function load_map(level) {
     timer = 0;
     if(level > 4) {
         game_state = GAME_OVER;
-        current_level = 1;
+        current_level = 0;
     }
-    game_lib.map = []; // maps[level];
-    //map = maps[level];
-//    map_iterate(function(x, y) {
-//            map[y][x] = maps[1][y][x] - 1;
-//    });
+    game_lib.map = [];
 
-    console.log("loaded map " + level);
-
-/*
     request = new XMLHttpRequest();
-    url = '//' + loc + '/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    url = '//' + loc + '/play/doctor-robot/maps/level_' + level + '.txt';
+    console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
         if (request.readyState !== 4 || request.status !== 200) {
 			return;
         }
-        parse_map(request.responseText);
+        game_lib.parse_map(request.responseText);
+        initialize_data();
     };
     request.send(null);
-*/
-    game_lib.parse_map(map_csv);
-    initialize_data();
 
 }
 
@@ -1526,7 +1534,7 @@ function CreditsScreen() {
         game_lib.draw_text("ART AND PROGRAMMING",20, 220);
         game_lib.draw_text("JAMES KERSEY",20, 234);
         game_lib.draw_text("MUSIC AND NOISE", 20, 260);
-        game_lib.draw_text("SPIKE the PERCUSSIONIST", 20, 274);
+        game_lib.draw_text("...NO DATA...", 20, 274);
     };
 
 }
@@ -1622,7 +1630,7 @@ function LevelsScreen() {
 		} else {
 			x += 74;
 		}
-		this.buttons.push(makeLevelButton(x, y, (i+1) + ''));		
+		this.buttons.push(makeLevelButton(x, y, (i + 1) + ''));
 	}
 /*
 	var x = 20;
@@ -2255,8 +2263,8 @@ function init() {
     ctx = canvas.getContext('2d');
     image_manager = new ImageManager();
     ctx.mozImageSmoothingEnabled = false;
-    current_level = 1;
-    load_map(1);
+    current_level = 0;
+    load_map(0);
 }
 
 function draw_parallax() {
