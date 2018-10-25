@@ -229,8 +229,7 @@ function ImageManager() {
 	"use strict";
 	var 
 	i,
-//    directory = "/play/doctor-robot/images/";
-    directory = "images/";
+    directory = "/play/doctor-robot/images/";
 
 	this.load_image = function(img, name) {
 		img.src = directory + name;
@@ -1473,7 +1472,7 @@ function load_map(level) {
     game_lib.map = [];
 
     request = new XMLHttpRequest();
-    url = '//' + loc + '/play/doctor-robot/maps/level_' + level + '.txt';
+    url = '/play/doctor-robot/maps/level_' + level + '.txt';
     console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
@@ -1484,7 +1483,6 @@ function load_map(level) {
         initialize_data();
     };
     request.send(null);
-
 }
 
 
