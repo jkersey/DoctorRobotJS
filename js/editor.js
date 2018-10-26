@@ -48,7 +48,7 @@ function load_map(level) {
     current_level = level;
     var request = new XMLHttpRequest();
     //request.open('GET', 'http://scoab/play/doctor-robot/maps/level_'+level+'.txt');
-    var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
+    //var url = 'http://scoab/play/doctor-robot/DoctorRobot.php?getMap|'+level;
     console.log(url);
     request.open('GET', url);
     request.onreadystatechange = function() {
@@ -258,7 +258,7 @@ function draw_menu_tiles() {
 
 function get_maps_by_user_id(user_id)
 {
-    $.get("DoctorRobot.php?getMapsByUserId|" + user_id, {}, function(data) {
+    $.get("/getMapsByUserId|" + user_id, {}, function(data) {
         var options = $("#level_id");
         var lines = data.split("\n");
         options.append("<option value='0'>Select a Map</option>");
