@@ -9,6 +9,7 @@ cp -r images/* export/images/
 cp -r maps/* export/maps/
 cp js/html5.js export/js/
 cp js/game_lib.js export/js/
+cp js/factories.js export/js/
 
 #~/bin/compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS --js js/html5.js > export/js/html5_min.js
 #~/bin/compiler.jar --compilation_level ADVANCED_OPTIMIZATIONS --js js/editor.js > export/js/editor_min.js

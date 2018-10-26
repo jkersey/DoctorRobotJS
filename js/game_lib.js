@@ -3,23 +3,24 @@ function GameLib() {
     this.entities = [];
     this.particles = [];
 }
+
 GameLib.VERSION = "v0.1.0";
 GameLib.MAX_PARTICLES = 500;
 GameLib.TILE_WIDTH = 32;
 
-
 GameLib.prototype.map_iterate = function(func) {
-    "use strict";
+    
     var x, y;
+
     for(y = 0; y < this.map.length; y++) {
         for(x = 0; x< this.map[0].length; x++) {
             func(x, y);
         }
     }
+
 };
 
 GameLib.prototype.pixel_to_tile = function(x, y) {
-    "use strict";
 
     var tile, x_tile = x >> 5, y_tile = y >> 5;
 
@@ -36,28 +37,28 @@ GameLib.prototype.pixel_to_tile = function(x, y) {
 };
 
 GameLib.prototype.vertical_intersect = function (y, yh, y2, y2h) {
-    "use strict";
+    
     return y + yh > y2 && y < y2 + y2h;
 
 };
 
 GameLib.prototype.intersect = function (sx, sy, sw, sh, tx, ty, tw, th) {
-    "use strict";
+    
     return sx + sw > tx && sx < tx + tw && sy + sh > ty && sy < ty + th;
 };
 
 GameLib.prototype.contains = function (sx, sy, sw, sh, tx, ty, tw, th) {
-    "use strict";
+    
     return sx + 5 > tx && sx + sw - 5 < tx + tw && sy + 5 > ty && sy + sh - 5 < ty + th;
 };
 
 GameLib.prototype.on_top_of = function(sx, sy, sw, sh, tx, ty, tw) {
-    "use strict";
+    
     return sx + sw > tx && sx < tx + tw && sy + sh -1 < ty && sy + sh + 1 > ty;
 };
 
 GameLib.prototype.parse_map = function(map_data) {
-    "use strict";
+    
     console.log("parsing map");
 
     var	cols, x, y,
@@ -85,7 +86,6 @@ GameLib.prototype.parse_map = function(map_data) {
 };
 
 GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
-	"use strict";
 
     this.x_tile = x_t;
     this.y_tile = y_t;
@@ -151,7 +151,7 @@ GameLib.prototype.move_stuff = function() {
 };
 
 GameLib.prototype.draw_entities = function () {
-    "use strict";
+    
     var i;
     for(i = 0; i < this.entities.length; ++i) {
         this.entities[i].draw();
@@ -166,12 +166,11 @@ GameLib.prototype.game_loop = function() {
 };
 
 GameLib.prototype.clear_screen = function() {
-	"use strict";
+	
     ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
 };
 
 GameLib.prototype.draw_map = function() {
-	"use strict";
 
 	var x_pos, y_pos, sx, sy, index;
 
@@ -190,7 +189,7 @@ GameLib.prototype.draw_map = function() {
 };
 
 GameLib.prototype.draw_particles = function() {
-    "use strict";
+    
     var i;
     for(i = 0; i < GameLib.MAX_PARTICLES; ++i) {
         if(this.particles[i].alive) {
@@ -201,14 +200,16 @@ GameLib.prototype.draw_particles = function() {
             } else {
                 ctx.fillStyle = "#" + (99 - this.particles[i].age) + "7777";
             }
-            this.drawRectangle(this.particles[i].x + window_x, this.particles[i].y + window_y, this.particles[i].size, this.particles[i].size, true);
+            this.drawRectangle(this.particles[i].x + window_x,
+                this.particles[i].y + window_y,
+                this.particles[i].size,
+                this.particles[i].size, true);
         }
     }
 };
 
-
 GameLib.prototype.draw_text = function (str, x, y) {
-	"use strict";
+	
 	var i, sx, sy, index;
     for (i=0; i<str.length; i++){
         index = str.charCodeAt(i) - 32;
@@ -219,9 +220,7 @@ GameLib.prototype.draw_text = function (str, x, y) {
     }
 };
 
-
 GameLib.prototype.drawRectangle = function (x, y, w, h, fill) {
-	"use strict";
 
 	ctx.beginPath();
 	ctx.rect(x, y, w, h);
@@ -231,12 +230,10 @@ GameLib.prototype.drawRectangle = function (x, y, w, h, fill) {
 };
 
 GameLib.prototype.fire_particles = function (x, y, size, col) {
-    "use strict";
+    
+    var num_particles = 10;
 
-    var i,
-        num_particles = 10;
-
-    for(i = 0; i < GameLib.MAX_PARTICLES; ++i) {
+    for(var i = 0; i < GameLib.MAX_PARTICLES; ++i) {
         if(!this.particles[i].alive) {
             this.particles[i].alive = true;
             this.particles[i].x = x;
@@ -244,6 +241,8 @@ GameLib.prototype.fire_particles = function (x, y, size, col) {
             this.particles[i].age = 0;
             this.particles[i].size = size;
             this.particles[i].col = col;
+            this.particles[i].x_vel = Math.floor(Math.random()*10 - 5);
+            this.particles[i].y_vel = -Math.floor(Math.random()*10 - 5);
             num_particles--;
             if(num_particles < 0) {
                 break;
@@ -254,41 +253,42 @@ GameLib.prototype.fire_particles = function (x, y, size, col) {
 
 
 GameLib.prototype.make_particles = function () {
-    "use strict";
 
-    var i;
-
-    for(i = 0; i < GameLib.MAX_PARTICLES; i++) {
+    for(var i = 0; i < GameLib.MAX_PARTICLES; i++) {
         this.particles[i] = [];
         this.particles[i].alive = false;
-        this.particles[i].x_vel = Math.floor(Math.random()*10 - 5);
-        this.particles[i].y_vel = Math.floor(Math.random()*10 - 5);
         this.particles[i].age = 0;
     }
 };
 
 GameLib.prototype.move_particles = function () {
-    "use strict";
 
-    var i;
+    for(var i = 0; i < GameLib.MAX_PARTICLES; ++i) {
+        var particle = this.particles[i];
 
-    for(i = 0; i < GameLib.MAX_PARTICLES; ++i) {
-        this.particles[i].age+=1;
-        if(this.particles[i].age > 100) {
-            this.particles[i].alive = false;
-            this.particles[i].age = 0;
+        particle.age += 1;
+        particle.size -= .05;
+
+        if(particle.age > 100) {
+            particle.alive = false;
+            particle.age = 0;
         }
-        if(this.particles[i].alive) {
-            this.particles[i].x += this.particles[i].x_vel;
-            if(game_lib.pixel_to_tile(this.particles[i].x, this.particles[i].y) > 0) {
-                this.particles[i].x -= this.particles[i].x_vel;
-                this.particles[i].x_vel = -this.particles[i].x_vel;
+
+        if(particle.alive) {
+
+            particle.x += particle.x_vel;
+
+            if(game_lib.pixel_to_tile(particle.x, particle.y) > 0) {
+                particle.x -= particle.x_vel;
+                particle.x_vel = -particle.x_vel;
             }
-            this.particles[i].y_vel += 0.3 / this.particles[i].size;
-            this.particles[i].y += this.particles[i].y_vel;
-            if(game_lib.pixel_to_tile(this.particles[i].x, this.particles[i].y) > 0) {
-                this.particles[i].y -= this.particles[i].y_vel * gravity / this.particles[i].size;
-                this.particles[i].y_vel = -this.particles[i].y_vel;
+
+            particle.y_vel += 0.3;  // particle.size;
+            particle.y += particle.y_vel;
+
+            if(game_lib.pixel_to_tile(particle.x, particle.y) > 0) {
+                particle.y -= particle.y_vel * gravity / particle.size;
+                particle.y_vel = -particle.y_vel;
             }
         }
     }
