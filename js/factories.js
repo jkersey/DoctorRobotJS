@@ -671,7 +671,7 @@ function build_player() {
 }
 
 
-function make_enemy(x, y, type) {
+EntityFactory.prototype.make_enemy = function(x, y, type) {
     "use strict";
 
     var image;
@@ -685,9 +685,9 @@ function make_enemy(x, y, type) {
     }
 
     return new Enemy(x, y, type, image);
-}
+};
 
-function make_enemies() {
+EntityFactory.prototype.make_enemies = function() {
     "use strict";
     var x, y;
 
@@ -696,41 +696,42 @@ function make_enemies() {
             if(game_lib.map[y][x] === T_ENEMY_1_START ||
                 game_lib.map[y][x] === T_ENEMY_2_START ||
                 game_lib.map[y][x] === T_BOSS_1_START) {
-                enemies.push(make_enemy(x, y, game_lib.map[y][x]));
+                enemies.push(this.make_enemy(x, y, game_lib.map[y][x]));
             }
         }
     }
 }
 
-function make_enemy_bullets() {
-    "use strict";
-    var i;
+EntityFactory.prototype.make_enemy_bullets = function() {
 
-    for(i = 0; i < max_enemy_bullets; ++i) {
+    for(var i = 0; i < max_enemy_bullets; ++i) {
         enemy_bullets[i] = [];
         enemy_bullets[i].alive = false;
         enemy_bullets[i].bullet_timer = 10;
     }
-}
+    return enemy_bullets;
+};
 
-function make_entities(entity_factory) {
+EntityFactory.prototype.make_entities = function() {
     "use strict";
 
+
+    var self = this;
     // make doors, switches and trampolines.
     // have to make switches before doors
     game_lib.map_iterate(function(x, y) {
         if(game_lib.map[y][x] > 15 && game_lib.map[y][x] < 32) {
-            game_lib.entities.push(entity_factory.make_entity(x, y, game_lib.map[y][x], SWITCH));
+            game_lib.entities.push(self.make_entity(x, y, game_lib.map[y][x], SWITCH));
         }
     });
     game_lib.map_iterate(function(x, y) {
         if(game_lib.map[y][x] > 31 && game_lib.map[y][x] < 48) {
-            game_lib.entities.push(entity_factory.make_entity(x, y, game_lib.map[y][x], DOOR));
+            game_lib.entities.push(self.make_entity(x, y, game_lib.map[y][x], DOOR));
         }
     });
     game_lib.map_iterate(function(x, y) {
         if(game_lib.map[y][x] > 7 && game_lib.map[y][x] < 16) {
-            game_lib.entities.push(entity_factory.make_entity(x, y, game_lib.map[y][x], game_lib.map[y][x]));
+            game_lib.entities.push(self.make_entity(x, y, game_lib.map[y][x], game_lib.map[y][x]));
         }
     });
 }

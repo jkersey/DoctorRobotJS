@@ -1483,9 +1483,9 @@ function initialize_data() {
     bullets = [];
     make_bullets();
     game_lib.make_particles();
-    make_entities(entity_factory);
-    make_enemies();
-    make_enemy_bullets();
+    entity_factory.make_entities();
+    entity_factory.make_enemies();
+    enemy_bullets = entity_factory.make_enemy_bullets();
     player = build_player();
     player.initialize();
     player.alive = true;
