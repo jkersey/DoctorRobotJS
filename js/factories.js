@@ -2,17 +2,15 @@ function EntityFactory(game_lib) {
     this.game_lib = game_lib;
 }
 
-
 EntityFactory.prototype.make_entity = function(x, y, type, parent_type) {
-    "use strict";
 
     var entity;
     var game_lib = this.game_lib;
     // Switches
     if(game_lib.map[y][x-1] === E_SWITCH) {
-        entity = build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
+        entity = this.build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
     } else if (game_lib.map[y][x+1] === E_SWITCH) {
-        entity = build_switch(x, y, SWITCH, images.switch_2, T_EMPTY, type);
+        entity = this.build_switch(x, y, SWITCH,  images.switch_2, T_EMPTY, type);
         // Teleporter
     } else if(game_lib.map[y+1][x] === E_TELEPORTER) {
         entity = build_teleporter(x, y, TELEPORTER, images.teleport_1, T_EMPTY, type, parent_type);
@@ -53,11 +51,11 @@ EntityFactory.prototype.make_entity = function(x, y, type, parent_type) {
     }
 
     return entity;
-}
+};
 
+EntityFactory.prototype.build_switch = function(x_t, y_t, tp, img, tile, key) {
 
-function build_switch(x_t, y_t, tp, img, tile, key) {
-    "use strict";
+    var game_lib = this.game_lib;
 
     var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.current_anim = entity_anim[ACTIVATED];
@@ -85,7 +83,7 @@ function build_switch(x_t, y_t, tp, img, tile, key) {
 
     };
     return entity;
-}
+};
 
 
 function build_fluid(x_t, y_t, tp, img, tile, key) {
