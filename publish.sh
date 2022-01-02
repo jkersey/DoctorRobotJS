@@ -1,12 +1,12 @@
 #!/bin/sh
-mkdir export
-mkdir export/js
-mkdir export/images
-mkdir export/maps
+#mkdir export
+#mkdir export/js
+#mkdir export/images
+#mkdir export/maps
 
-cp *.html export/
-cp -r images/* export/images/
-cp -r maps/* export/maps/
+#cp *.html export/
+#cp -r images/* export/images/
+#cp -r maps/* export/maps/
 cp js/html5.js export/js/
 cp js/game_lib.js export/js/
 cp js/factories.js export/js/

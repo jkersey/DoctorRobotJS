@@ -4,7 +4,7 @@ function GameLib() {
     this.particles = [];
 }
 
-GameLib.VERSION = "v0.1.0";
+GameLib.VERSION = "v0.1.1";
 GameLib.MAX_PARTICLES = 500;
 GameLib.TILE_WIDTH = 32;
 
@@ -127,6 +127,9 @@ GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
 		x_index = this.current_anim[this.frame];
                 if(this.type === 256) {
                     console.log("index is " + this.frame)
+                }
+                if(this.type === T_PERSON && this.state === 9) {
+                    game_lib.draw_text("Thanks Doctor Robot!", this.x - 32 + window_x, this.y - 16 + window_y);
                 }
                 ctx.drawImage(this.image, 
 			      x_index * 32, this.y_index, 32, 32,

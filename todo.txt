@@ -5,3 +5,6 @@
 [ ] Fix number graphics
 [ ] rework status bar
 [ ] Chapter screen
+[ ] Sound
+[ ] Add scientist dialog
+[ ] Add portable game console wrapper graphic
