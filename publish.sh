@@ -4,7 +4,7 @@
 #mkdir export/images
 #mkdir export/maps
 
-#cp *.html export/
+cp *.html export/
 #cp -r images/* export/images/
 #cp -r maps/* export/maps/
 cp js/html5.js export/js/

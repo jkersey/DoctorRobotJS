@@ -6,6 +6,8 @@ game_lib = new GameLib();
 
 console.log("got gamelib");
 
+var soundContext = null;
+
 var entity_factory = null;
 var god_mode = false;
 var images_loaded = 0;
@@ -1498,12 +1500,50 @@ function initialize_data() {
     }
 }
 
+function finishedLoading(bufferList) {
+    // Create two sources and play them both together.
+    var source1 = soundContext.createBufferSource();
+    var source2 = soundContext.createBufferSource();
+    console.log(bufferList[0]);
+    source1.buffer = bufferList[0];
+    source2.buffer = bufferList[1];
+
+    source1.connect(soundContext.destination);
+    source2.connect(soundContext.destination);
+    console.log("starting sounds");
+    source1.start(0);
+    source2.start(0);
+}
+
+function initialize_sound() {
+    var bufferLoader = new BufferLoader(
+        soundContext,
+        [
+            'sounds/bark.ogg',
+            'sounds/drip.ogg'
+        ],
+        finishedLoading);
+    bufferLoader.load();
+}
+
+
 function init() {
     "use strict";
     console.log("initializing");
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     image_manager = new ImageManager();
+
+    try {
+        // Fix up for prefixing
+        window.AudioContext = window.AudioContext||window.webkitAudioContext;
+        soundContext = new AudioContext();
+    }
+    catch(e) {
+        alert('Web Audio API is not supported in this browser');
+    }
+    console.log("Initializing sound");
+    initialize_sound();
     entity_factory = new EntityFactory(game_lib);
     ctx.mozImageSmoothingEnabled = false;
     current_level = 0;
