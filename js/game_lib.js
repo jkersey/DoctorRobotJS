@@ -124,7 +124,7 @@ GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
                 }
             }
             if(this && this.image) {
-		x_index = this.current_anim[this.frame];
+                x_index = this.current_anim[this.frame];
                 if(this.type === 256) {
                     console.log("index is " + this.frame)
                 }

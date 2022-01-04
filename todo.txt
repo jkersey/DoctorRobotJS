@@ -1,10 +1,17 @@
 [ ] Fix brain animation
-[ ] Invincibility powerup
 [ ] Acid death animation
-[ ] Invincibility animation
-[ ] Fix number graphics
 [ ] rework status bar
 [ ] Chapter screen
-[ ] Sound
-[ ] Add scientist dialog
+[X] Add scientist dialog (2022-01-02)
 [ ] Add portable game console wrapper graphic
+[ ] Fix font graphic
+[ ] Animated intro
+[ ] Add sounds
+[ ] Doom-style level overview screen
+[ ] Save/re-spawn points
+[ ] More graphics for levels
+[ ] More enemies
+[ ] More power-ups
+    - Invincibility
+    - Invisibility
+[ ] Integrate with adv-ed
