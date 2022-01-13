@@ -1503,24 +1503,19 @@ function initialize_data() {
 function finishedLoading(bufferList) {
     // Create two sources and play them both together.
     var source1 = soundContext.createBufferSource();
-    var source2 = soundContext.createBufferSource();
     console.log(bufferList[0]);
     source1.buffer = bufferList[0];
-    source2.buffer = bufferList[1];
 
     source1.connect(soundContext.destination);
-    source2.connect(soundContext.destination);
     console.log("starting sounds");
     source1.start(0);
-    source2.start(0);
 }
 
 function initialize_sound() {
     var bufferLoader = new BufferLoader(
         soundContext,
         [
-            'sounds/bark.ogg',
-            'sounds/drip.ogg'
+            'sounds/doctor_robot_theme.mp3'
         ],
         finishedLoading);
     bufferLoader.load();
