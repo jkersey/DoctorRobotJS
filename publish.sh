@@ -1,4 +1,6 @@
 #!/bin/sh
+#TODO Gulp or Makefile?
+
 #mkdir export
 #mkdir export/js
 #mkdir export/images
