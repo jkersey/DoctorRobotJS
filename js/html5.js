@@ -2,214 +2,179 @@
 
 console.log("startup");
 
-game_lib = new GameLib();
+let game_lib = new GameLib();
 
 console.log("got gamelib");
 
-var entity_factory = null;
-var god_mode = false;
-var images_loaded = 0;
+let entity_factory = null;
+const god_mode = false;
+let images_loaded = 0;
 
-var mouseX = 0;
-var mouseY = 0;
-var mouseDown = false;
-var mouseUp = false;
+let mouseX = 0;
+let mouseY = 0;
+let mouseDown = false;
+let mouseUp = false;
 
 
-var game_state;
-var INITIALIZE = 0;
-var RUNNING = 2;
-var INTERSTITIAL = 5;
+let game_state;
+const INITIALIZE = 0;
+const RUNNING = 2;
+const INTERSTITIAL = 5;
 
-var timer = 0;
+let timer = 0;
 
 game_state = INITIALIZE;
-var static_time = '';
+let static_time = '';
 
 // interstitial IDs
-var GET_READY = 999999;
-var GAME_OVER = 999998;
-var CREDITS =   999997;
-var LEVEL_END = 999996;
-var PAUSED =    999995;
-var RESET_LEVEL = 999994;
-var CHAPTERS =  999993;
-var LEVELS =    999992;
-var HELP =      999991;
+const GET_READY = 999999;
+const GAME_OVER = 999998;
+const CREDITS = 999997;
+const LEVEL_END = 999996;
+const PAUSED = 999995;
+const RESET_LEVEL = 999994;
+const CHAPTERS = 999993;
+const LEVELS = 999992;
+const HELP = 999991;
 
-var interstitialId = 0;
+let interstitialId = 0;
 
-var SWITCH = 256;
-var DOOR = 257;
-var TELEPORTER = 258;
+const SWITCH = 256;
+const DOOR = 257;
+const TELEPORTER = 258;
 
-var map_loaded = false;
-var current_level = '0';
-var current_boss;
+let map_loaded = false;
+let current_level = '0';
+let current_boss;
 
-var saved_people = 0;
-var total_people = 0;
+let saved_people = 0;
+let total_people = 0;
 
-var TILE_WIDTH = 32;
+const TILE_WIDTH = 32;
 
 // control tiles
-var T_EMPTY = 0;
-var T_PLAYER_START = 1;
-var T_ENEMY_1_START = 3;
-var T_ENEMY_2_START = 4;
+const T_EMPTY = 0;
+const T_PLAYER_START = 1;
+const T_ENEMY_1_START = 3;
+const T_ENEMY_2_START = 4;
 
-var T_BOSS_1_START = 7;
-var T_PERSON = 8;
-var T_JETPACK = 9;
-var T_JUMPER = 10;
-var T_CRATE = 11;
-var T_FLUID = 12;
-var T_PLATFORM = 14;
-var T_EXIT = 15;
+const T_BOSS_1_START = 7;
+const T_PERSON = 8;
+const T_JETPACK = 9;
+const T_JUMPER = 10;
+const T_CRATE = 11;
+const T_FLUID = 12;
+const T_PLATFORM = 14;
+const T_EXIT = 15;
 
-var EMPTY_BLOCKING = 255;
+const EMPTY_BLOCKING = 255;
 
-var fluid_anim = [0, 1, 2, 3];
+const fluid_anim = [0, 1, 2, 3];
 
-var E_TELEPORTER = 49;
-var E_SWITCH = 48;
-var E_DOOR = 64;
-/*
+const E_TELEPORTER = 49;
+const E_SWITCH = 48;
+const E_DOOR = 64;
 
-var SWITCH_LEFT = 32;
-var SWITCH_FLOOR = 33;
-var SWITCH_RIGHT = 34;
-var SWITCH_SHOOTABLE_LEFT = 35;
-var SWITCH_SHOOTABLE_RIGHT = 36;
-var SWITCH_TOGGLE_LEFT = 37;
-var SWITCH_TOGGLE_RIGHT = 38;
-
-var DOOR_TOP = 40;
-var DOOR_BOTTOM = 41;
-var DOOR_LEFT = 42;
-var DOOR_RIGHT = 43;
-
-var SWITCH_1 = 16;
-var SWITCH_2 = 17;
-var SWITCH_3 = 18;
-var SWITCH_4 = 19;
-var SWITCH_5 = 20;
-var SWITCH_6 = 21;
-var SWITCH_7 = 22;
-var SWITCH_8 = 23;
-
-var DOOR_1 = 24;
-var DOOR_2 = 25;
-var DOOR_3 = 26;
-var DOOR_4 = 27;
-var DOOR_5 = 28;
-var DOOR_6 = 29;
-var DOOR_7 = 30;
-var DOOR_8 = 31;
-*/
 // animation sequence ids
-var WALK_LEFT = 0;
-var WALK_RIGHT = 1;
-var JET_LEFT = 2;
-var JET_RIGHT = 3;
-var STAND_LEFT = 4;
-var STAND_RIGHT = 5;
-var STAND = 6;
-var CROUCH_LEFT = 7;
-var CROUCH_RIGHT = 8;
-var DEACTIVATED = 0;
-var ACTIVATED = 1;
-var OPEN = 1;
-var CLOSED = 0;
+const WALK_LEFT = 0;
+const WALK_RIGHT = 1;
+const JET_LEFT = 2;
+const JET_RIGHT = 3;
+const STAND_LEFT = 4;
+const STAND_RIGHT = 5;
+const STAND = 6;
+const CROUCH_LEFT = 7;
+const CROUCH_RIGHT = 8;
+const DEACTIVATED = 0;
+const ACTIVATED = 1;
+const OPEN = 1;
+const CLOSED = 0;
 
-var splashScreen = null;
-var pauseScreen = null;
-var helpScreen = null;
-var creditsScreen = null;
-var chaptersScreen = null;
-var levelsScreen = null;
-var interstitial = null;
-var level_end = null;
-var gameover = null;
-var key_pressed;
-var keyIsDown = false;
-
+let splashScreen = null;
+let pauseScreen = null;
+let helpScreen = null;
+let creditsScreen = null;
+let chaptersScreen = null;
+let levelsScreen = null;
+let interstitial = null;
+let level_end = null;
+let gameover = null;
+let key_pressed;
 
 // enemies
-var enemies = [];
-var enemy_bullet_timer = 4;
-var max_enemy_bullets = 100;
-var enemy_bullets = [];
+let enemies = [];
+let enemy_bullet_timer = 4;
+const max_enemy_bullets = 100;
+let enemy_bullets = [];
 
-var BOSS_FULL = 0;
-var BOSS_HALF = 1;
-var BOSS_EMPTY = 2;
+const BOSS_FULL = 0;
+const BOSS_HALF = 1;
+const BOSS_EMPTY = 2;
 
 
-var person_anim = [];
+const person_anim = [];
 person_anim[0] = [0];
 person_anim[1] = [1];
 person_anim[3] = [2, 3, 4, 5, 6, 7, 8, 9];
 
 
 // player
-var player;
+let player;
 
 //var robot_frame = 0;
 
 // player bullets
-var bullet_timer = 4;
-var max_bullets = 10;
-var bullets = [];
-var bullet_speed = 8;
+let bullet_timer = 4;
+const max_bullets = 10;
+let bullets = [];
+const bullet_speed = 8;
 
 // environment
-var window_x = 0;
-var window_y = 0;
-var reset_level = false;
-var reset_timer = 0;
-var animating = false;
+let window_x = 0;
+let window_y = 0;
+let reset_level = false;
+let reset_timer = 0;
+let animating = false;
 
-//var inertiaX = 0;
-//var inertiaY = 0;
-var gravity = 0.5;
+// not a const
+let gravity = 0.5;
 
-var waitIndex = 0;
-var frameRate = 6;
+let waitIndex = 0;
+const frameRate = 6;
 
-var canvas = null;
-var ctx = null;
-var keys = [];
+let canvas = null;
+let ctx = null;
+const keys = [];
 
 // entities
-var entity_anim = [];
+const entity_anim = [];
 entity_anim[INITIALIZE] = [0, 0, 0];
 entity_anim[ACTIVATED] = [0, 1, 2];
 entity_anim[DEACTIVATED] = [3, 4, 5];
 
-var jumper_anim = [];
+const jumper_anim = [];
 jumper_anim[ACTIVATED] = [0, 1, 3, 5, 0];
 
-var game_images = [];
+let game_images = [];
 
 // images
-var level_button_img = new Image();
-var splash_screen_img = new Image();
-var alert_jetpack_img = new Image();
-var game_over_img = new Image();
-var chapters_img = new Image();
-var hud_img = new Image();
-var font_img = new Image();
-var tile_img = new Image();
-var dude_img = new Image();
-var people_img = new Image();
-var enemy_img = new Image();
-var enemy_2_img = new Image();
-var brain_1_img = new Image();
-var map_img = new Image();
-var bullet_img = new Image();
-var parallax_img = new Image();
-var images = [];
+const level_button_img = new Image();
+const splash_screen_img = new Image();
+const alert_jetpack_img = new Image();
+const game_over_img = new Image();
+const chapters_img = new Image();
+const hud_img = new Image();
+const font_img = new Image();
+const tile_img = new Image();
+const dude_img = new Image();
+const people_img = new Image();
+const enemy_img = new Image();
+const enemy_2_img = new Image();
+const brain_1_img = new Image();
+const map_img = new Image();
+const bullet_img = new Image();
+const parallax_img = new Image();
+const images = [];
 images.crate_1 = new Image();
 images.platform_1 = new Image();
 images.switch_1 = new Image();
@@ -227,10 +192,8 @@ images.fuel_overlay = new Image();
 
 
 function ImageManager() {
-	"use strict";
-	var 
-	i,
-    directory = "images/";
+
+    let directory = "images/";
 
 	this.load_image = function(img, name) {
 		img.src = directory + name;
@@ -238,7 +201,6 @@ function ImageManager() {
 	};
 
     this.load_images = function() {
-
 		game_images = [
 			[level_button_img, 'level_button.png'],
 			[alert_jetpack_img, 'jetpack.png'],
@@ -273,22 +235,17 @@ function ImageManager() {
 			[chapters_img, 'chapters.png']
 		];
 		
-		for(i = 0; i < game_images.length; ++i) {
+		for(let i = 0; i < game_images.length; ++i) {
 			this.load_image(game_images[i][0], game_images[i][1]);
 		}
-
     };
-
 }
 
-var image_manager;
-
+let image_manager;
 
 function get_trigger(id){
 	"use strict";
-	var i;
-
-    for(i = 0; i < game_lib.entities.length; ++i) {
+    for(let i = 0; i < game_lib.entities.length; ++i) {
         if(game_lib.entities[i].key === id - 16) {
             return game_lib.entities[i];
         }
@@ -298,8 +255,8 @@ function get_trigger(id){
 
 function get_target(id) {
 	"use strict";
-	var i;
-    for(i = 0; i < game_lib.entities.length; ++i) {
+
+    for(let i = 0; i < game_lib.entities.length; ++i) {
         if(game_lib.entities[i].key === id + 16) {
             return game_lib.entities[i];
         }
@@ -314,7 +271,6 @@ function intersectedTile(entity) {
 
 function Enemy(x_t, y_t, type, img) {
 	"use strict";
-
 
     this.enemy_anim = [];
     this.enemy_anim[WALK_RIGHT] = [7, 6, 5, 4];
@@ -338,7 +294,7 @@ function Enemy(x_t, y_t, type, img) {
     this.frame = 0;
     this.state = ACTIVATED;
 
-    this.is_being_pushed = false;
+    // this.is_being_pushed = false;
     this.wait_index = 0;
     this.alive = true;
 
@@ -359,13 +315,9 @@ function Enemy(x_t, y_t, type, img) {
 }
 
 function dude_fire() {
-	"use strict";
-
-	var i;
-
     if(bullet_timer > 10) {
         bullet_timer = 0;
-        for(i = 0; i < max_bullets; ++i) {
+        for(let i = 0; i < max_bullets; ++i) {
             if(!bullets[i].alive) {
                 bullets[i].x = player.x + 26;
                 bullets[i].y = player.y + 25;
@@ -381,19 +333,13 @@ function dude_fire() {
 }
 
 function get_input() {
-	"use strict";
-	
-	var i;
-
     key_pressed = false;
-
-    for(i = 0; i < keys.length; ++i) {
+    for(let i = 0; i < keys.length; ++i) {
         if(keys[i] !== false && keys[i] !== undefined) {
             key_pressed = true;
             break;
         }
     }
-
 
     if (keys.hasOwnProperty('88') && keys[88] && player.alive) {
         dude_fire();
@@ -413,15 +359,13 @@ function get_input() {
 }
 
 function UIBase(x, y, width, height, action) {
-	"use strict";
-
     this.x = x;
     this.y = y;
     this.height = height;
     this.width = width;
 
-    this.target_x = 0;
-    this.target_y = 0;
+    // this.target_x = 0;
+    // this.target_y = 0;
 
     this.action = action;
 
@@ -435,8 +379,8 @@ function UIBase(x, y, width, height, action) {
     this.animations[this.START] = [0];
     this.animations[this.HOVER] = [1, 2, 3];
     this.animations[this.ACTIVATED] = [4, 5, 6];
-    this.current_animation = this.animations[this.START];
-    this.current_frame = 0;
+    // this.current_animation = this.animations[this.START];
+    // this.current_frame = 0;
 
     this.state = this.START;
 
@@ -451,7 +395,7 @@ function UIBase(x, y, width, height, action) {
         if(mouseUp) {
             mouseUp = false;
             this.activate();
-            this.current_animation = this.animations[this.ACTIVATED];
+            //this.current_animation = this.animations[this.ACTIVATED];
         }
     };
 
@@ -463,24 +407,12 @@ function UIBase(x, y, width, height, action) {
         } else {
             this.state = this.START;
         }
-		/*
-        if(Math.abs(this.x - this.target_x) > 1) {
-            // use easing function
-        }
-        
-        if(Math.abs(this.y - this.target_y) > 1) {
-            // use easing function
-        }
-		*/
     };
-
-
 }
 
 
 function LevelButton(x, y, width, height, text, action) {
-	"use strict";
-	
+
 	this.inheritsFrom = Button;
 	this.inheritsFrom(x, y, 64, 64, text, action);
 
@@ -492,21 +424,21 @@ function LevelButton(x, y, width, height, text, action) {
 		game_lib.draw_text(this.text, this.text_x, this.text_y);
 	};
 
-    this.process_click = function() {
+/*  this.process_click = function() {
         if(mouseUp) {
 			current_level = this.text-1;
 			resetLevel();
             mouseUp = false;
         }
     };
+ */
 }
 
 function Button(x, y, width, height, text, action) {
-	"use strict";
 
     this.inheritsFrom = UIBase;
     this.inheritsFrom(x, y, width, height, action);
-    this.isAButton = "true";
+    //this.isAButton = "true";
 
     if(text === null) { text = "TEXT"; }
 
@@ -527,48 +459,16 @@ function Button(x, y, width, height, text, action) {
         game_lib.draw_text(this.text, this.text_x, this.text_y);
     };
 }
-/*
-function ImageButton(image, x, y, width, height, action) {
-	"use strict";
-
-    this.inheritsFrom = Button;
-    this.inheritsFrom(x, y, width, height, action);
-    this.image = "I have an image";
-
-    this.draw = function() {
-        this.move();
-        ctx.drawImage(this.image, 
-                      this.current_animation[this.current_frame] * 32, 0, 
-                      this.width, this.height,
-                      this.x,this.y, this.width, this.height);
-        this.current_frame++;
-        if(this.current_animation.length >= this.current_frame) {
-            this.current_frame = 0;
-        }
-    };
-
-}
-*/
-
-function Screen(background) {
-	"use strict";
-
-    this.buttons = [];
-    this.background_image = background;
-}
-
 
 function SplashScreen() {
-	"use strict";
 
     this.buttons = [];
 
-    var 
-	button_width = 300,
-    button_height = 20,
-    button_padding = 10,
-    button_x = (canvas.width - button_width) / 2,
-    button_y = 200;
+    let button_width = 300;
+    let button_height = 20;
+    let button_padding = 10;
+    let button_x = (canvas.width - button_width) / 2;
+    let button_y = 200;
 
     interstitialId = GET_READY;
 
@@ -590,11 +490,11 @@ function SplashScreen() {
     };
 
     this.draw = function() {
-		var i;
         ctx.drawImage(splash_screen_img, 0, 0);
-		game_lib.draw_text("ENGINE " + GameLib.VERSION, 2, 308);
+        game_lib.draw_text("ENGINE " + GameLib.VERSION, 2, 308);
+        game_lib.draw_text("DRIVER " + "10.001.10", 2, 290);
 
-        for(i = 0; i < this.buttons.length; ++i) {
+        for(let i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
     };
@@ -606,7 +506,7 @@ function SplashScreen() {
 function HelpScreen() {
 	"use strict";
 
-    var wait = 0;
+    let wait = 0;
 
     this.update = function() {
         if(wait > 60) {
@@ -827,13 +727,11 @@ function GameOver() {
 function ChaptersScreen() {
 	"use strict";
 
-    var wait = 0;
     this.buttons = [];
 
-    var 
+    let
 	button_width = 300,
     button_height = 20,
-    button_padding = 10,
     button_x = (canvas.width - button_width) / 2,
     button_y = 50;
 
@@ -847,11 +745,10 @@ function ChaptersScreen() {
 	};
 
     this.draw = function() {
-		var i;
 		ctx.drawImage(tile_img, 0, 0, canvas.width, canvas.height);
 //        ctx.drawImage(chapters_img, 0, 0);
         game_lib.draw_text("CHAPTERS",20, 20);
-        for(i = 0; i < this.buttons.length; ++i) {
+        for(let i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
 	};
@@ -860,23 +757,15 @@ function ChaptersScreen() {
 function LevelsScreen() {
 	"use strict";
 
-    var wait = 0;
     this.buttons = [];
-
-    var 
-	button_width = 64,
-    button_height = 64,
-    button_padding = 10,
-    button_x = (canvas.width - button_width) / 2,
-    button_y = 200;
 
     interstitialId = GET_READY;
 
-	var x = 20;
-	var y = 74;
+	let x = 20;
+	let y = 74;
 
-	for(var i = 0; i < 5; ++i) {
-		if (i == 0) {
+	for(let i = 0; i < 5; ++i) {
+		if (i === 0) {
 			//
 		} else if(x > canvas.width - 140) {
 			x = 20;
@@ -886,64 +775,20 @@ function LevelsScreen() {
 		}
 		this.buttons.push(makeLevelButton(x, y, (i + 1) + ''));
 	}
-/*
-	var x = 20;
-	var y = 74;
-
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '02'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '03'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '04'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '05'));
-
-	x = 20;
-	y += 74;
-	this.buttons.push(makeLevelButton(x, y, '06'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '07'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '08'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '09'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '10'));
-	x += 74;
-
-	x = 20;
-	y += 74;
-	this.buttons.push(makeLevelButton(x, y, '11'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '12'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '13'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '14'));
-	x += 74;
-	this.buttons.push(makeLevelButton(x, y, '15'));
-	x += 74;
-*/
-					  
 
     this.update = function() {
 	};
 
     this.draw = function() {
-		var i;
         ctx.drawImage(chapters_img, 0, 0);
         game_lib.draw_text("LEVELS",20, 50);
-        for(i = 0; i < this.buttons.length; ++i) {
+        for(let i = 0; i < this.buttons.length; ++i) {
             this.buttons[i].draw();
         }
 	};
 }
 
-
-
 function showCreditsScreen() {
-	"use strict";
 
     if(creditsScreen === null || creditsScreen === undefined) {
         creditsScreen = new CreditsScreen();
@@ -954,7 +799,6 @@ function showCreditsScreen() {
 }
 
 function showSplashScreen() {
-	"use strict";
 
     if(splashScreen === null || splashScreen === undefined) {
         splashScreen = new SplashScreen();
@@ -964,7 +808,6 @@ function showSplashScreen() {
 }
 
 function showHelpScreen() {
-	"use strict";
 
     if(helpScreen === null || helpScreen === undefined) {
         helpScreen = new HelpScreen();
@@ -1510,37 +1353,6 @@ function init() {
     load_map(0);
 }
 
-function draw_parallax() {
-	"use strict";
-
-    ctx.drawImage(parallax_img, 0, 0, 
-                  512, 512, 
-                  window_x >> 4 - 5, window_y >> 4, 
-                  512, 512);
-}
-
-function aKeyIsDown() {
-	"use strict";
-
-    if(keyIsDown) {
-        keyIsDown = false;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-function mouseIsDown() {
-	"use strict";
-
-    if(mouseUp) {
-        mouseUp = false;
-        return true;
-    } else {
-        return false;
-    }
-}
-
 window.onmousedown = function() {
 	"use strict";
     mouseDown = true;
@@ -1558,7 +1370,7 @@ window.onmouseup = function() {
 function mouseMove(e) {
 	"use strict";
 
-	var top, left, obj, posx, posy;
+	let top, left, obj, posx, posy;
 
     obj = canvas;
     top = 0;
@@ -1590,9 +1402,7 @@ function keyDown(evt){ keys[evt.keyCode] = true; cancelDefaultAction(evt);}
 function keyUp(evt){ keys[evt.keyCode] = false; cancelDefaultAction(evt);}
 
 function cancelDefaultAction(e) {
-	var evt = e ? e:window.event;
-	if (evt.preventDefault) evt.preventDefault();
-	evt.returnValue = false;
+    e.preventDefault();
 	return false;
 }
 
@@ -1600,14 +1410,7 @@ function cancelDefaultAction(e) {
 // shim layer with setTimeout fallback
 window.requestAnimFrame = (function(){
 	"use strict";
-    return  window.requestAnimationFrame   ||
-        window.webkitRequestAnimationFrame ||
-        window.mozRequestAnimationFrame    ||
-        window.oRequestAnimationFrame      ||
-        window.msRequestAnimationFrame     ||
-        function(callback) {
-            window.setTimeout(callback, 1000 / 60);
-        };
+    return  window.requestAnimationFrame;
 })();
 
 Function.prototype.method = function (name, func) {
@@ -1619,7 +1422,7 @@ Function.prototype.method = function (name, func) {
 
 Function.method('inherits', function (parent) {
 	"use strict";
-	var d, f, r, t, p;
+	let d, f, r, t, p;
 
     d = {};
 	p = (this.prototype = new parent());
@@ -1627,7 +1430,7 @@ Function.method('inherits', function (parent) {
         if (!(d.hasOwnProperty(name))) {
             d[name] = 0;
         }
-        var f, r, t = d[name], v = parent.prototype;
+        let f, r, t = d[name], v = parent.prototype;
         if (t) {
             while (t) {
                 v = v.constructor.prototype;
