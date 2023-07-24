@@ -10,7 +10,7 @@ GameLib.TILE_WIDTH = 32;
 
 GameLib.prototype.map_iterate = function(func) {
     
-    var x, y;
+    let x, y;
 
     for(y = 0; y < this.map.length; y++) {
         for(x = 0; x< this.map[0].length; x++) {
@@ -22,7 +22,7 @@ GameLib.prototype.map_iterate = function(func) {
 
 GameLib.prototype.pixel_to_tile = function(x, y) {
 
-    var tile, x_tile = x >> 5, y_tile = y >> 5;
+    let tile, x_tile = x >> 5, y_tile = y >> 5;
 
     try {
 	tile = this.map[y_tile][x_tile];
@@ -81,7 +81,6 @@ GameLib.prototype.parse_map = function(map_data) {
             this.map[y-1][x] = cols[x] - 1;
         }
     }
-    this.map_loaded = true;
     console.log("Loaded map");
 };
 
@@ -101,14 +100,13 @@ GameLib.prototype.Entity = function(x_t, y_t, tp, img, tile, key) {
     this.frame = this.current_anim.length - 1;
     this.state = ACTIVATED;
     this.is_teleportable = false;
-    this.is_being_pushed = false;
     this.wait_index = 0;
     this.alive = true;
     this.loop_animation = false;
     game_lib.map[this.y_tile][this.x_tile] = tile;
 
     this.draw = function() {
-		var x_index;
+		let x_index;
 
         this.wait_index++;
         if(this.alive) {

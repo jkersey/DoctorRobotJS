@@ -4,8 +4,8 @@ function EntityFactory(game_lib) {
 
 EntityFactory.prototype.make_entity = function(x, y, type, parent_type) {
 
-    var entity;
-    var game_lib = this.game_lib;
+    let entity;
+    let game_lib = this.game_lib;
     // Switches
     if(game_lib.map[y][x-1] === E_SWITCH) {
         entity = this.build_switch(x, y, SWITCH, images.switch_1, T_EMPTY, type);
@@ -55,9 +55,9 @@ EntityFactory.prototype.make_entity = function(x, y, type, parent_type) {
 
 EntityFactory.prototype.build_switch = function(x_t, y_t, tp, img, tile, key) {
 
-    var game_lib = this.game_lib;
+    let game_lib = this.game_lib;
 
-    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    let entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.current_anim = entity_anim[ACTIVATED];
     entity.current_frame = entity_anim[ACTIVATED].length - 1;
 
@@ -89,7 +89,7 @@ EntityFactory.prototype.build_switch = function(x_t, y_t, tp, img, tile, key) {
 function build_fluid(x_t, y_t, tp, img, tile, key) {
     "use strict";
 
-    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    let entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     if(tp === 13) {
         entity.y_index = 32;
     }
@@ -110,7 +110,7 @@ function build_fluid(x_t, y_t, tp, img, tile, key) {
 function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
     "use strict";
 
-    var entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
+    let entity = new game_lib.Entity(x_t, y_t, tp, img, tile, key);
     entity.parent_type = parent_type;
     entity.state = OPEN;
     entity.teleporter_anim = [];
@@ -132,7 +132,7 @@ function build_teleporter(x_t, y_t, tp, img, tile, key, parent_type) {
     };
 
     entity.move = function() {
-        var
+        let
             i,
             y_modified,
             stay_closed,
@@ -454,10 +454,8 @@ function build_exit(x_t, y_t, tp, img, tile, key) {
 
 
 function build_player() {
-    "use strict";
 
-    //current_anim = anim[WALK_RIGHT];
-    player = Object;
+    let player = Object;
 
     game_lib.map_iterate(function(x, y) {
         if(game_lib.map[y][x] === T_PLAYER_START) {
@@ -493,20 +491,15 @@ function build_player() {
         this.moving_right = false;
         this.up = false;
         this.down = false;
-//        this.can_teleport = true;
         this.alive = true;
         this.pause_timer = 0;
         this.NORMAL = 0;
-//        this.TELEPORT_START = 1;
-//        this.TELEPORT_END = 2;
-        this.target_x = 0;
-        this.target_y = 0;
         this.state = this.NORMAL;
         this.on_a_crate = false;
     };
 
     player.move = function() {
-        var i, adjusted_y, adjusted_height;
+        let adjusted_y, adjusted_height;
 
         this.pause_timer--;
         if(this.pause_timer > 0) {
@@ -517,7 +510,7 @@ function build_player() {
 
         if(this.alive) {
             this.on_a_crate = false;
-            for(i = 0; i < game_lib.entities.length; ++i) {
+            for(let i = 0; i < game_lib.entities.length; ++i) {
                 adjusted_y = this.y;
                 adjusted_height = 48;
                 if(this.crouching) {
